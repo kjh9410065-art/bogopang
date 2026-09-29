@@ -199,6 +199,9 @@ async function loadProducts(env) {
     result.push({
       name: item.productName,
       price: item.productPrice,
+      // 쿠팡 응답에 원가/할인율이 포함되는 경우 그대로 전달하고, 없는 값은 임의로 계산하지 않습니다.
+      originalPrice: item.originalPrice ?? item.productOriginalPrice ?? item.listPrice ?? null,
+      discountRate: item.discountRate ?? item.discountRatePercent ?? null,
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
