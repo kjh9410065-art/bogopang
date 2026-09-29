@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bogopang",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-30",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "triggers": {
+    "crons": ["0 22 * * *"]
+  }
+}
