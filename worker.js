@@ -10,6 +10,21 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // 수동 갱신 요청은 쿠팡에서 최신 상품을 다시 받아 캐시를 교체합니다.
+    if (url.pathname === "/api/refresh" && request.method === "GET") {
+      try {
+        await refreshProducts(env);
+        return new Response(JSON.stringify({ ok: true, message: "상품 갱신 완료" }), {
+          headers: { "Content-Type": "application/json; charset=UTF-8" }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ ok: false, error: error.message }), {
+          status: 502,
+          headers: { "Content-Type": "application/json; charset=UTF-8" }
+        });
+      }
+    }
+
     // 상품 API 요청은 쿠팡 Gold Box 데이터를 가져와 24시간 캐시합니다.
     if (url.pathname === "/api/products") {
       return getProductsResponse(env, ctx);
