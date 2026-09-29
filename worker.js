@@ -2,7 +2,7 @@
 // 쿠팡 파트너스 API를 서버에서 호출해 API 키를 브라우저에 노출하지 않습니다.
 
 const COUPANG_DOMAIN = "https://api-gateway.coupang.com";
-const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=8&imageSize=300x300";
+const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=20&imageSize=300x300";
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
@@ -143,8 +143,8 @@ async function loadProducts(env) {
       ? goldbox.data.productData
       : [];
 
-  // 화면에 표시할 상품 수를 8개로 제한합니다.
-  const selected = products.slice(0, 8);
+  // 딥링크 변환 실패 상품이 있어도 최종적으로 8개를 채울 수 있도록 후보를 넉넉히 확보합니다.
+  const selected = products.slice(0, 20);
   const converted = [];
 
   // Gold Box에서 받은 URL 대신 상품 ID로 표준 상품 URL을 만들어 변환합니다.
@@ -182,8 +182,8 @@ async function loadProducts(env) {
     }
   }
 
-  // 파트너스 링크가 정상적으로 생성된 상품만 사이트에 표시합니다.
-  return converted.map(({ item, partnerUrl }) => ({
+  // 파트너스 링크가 정상적으로 생성된 상품 중 최대 8개만 사이트에 표시합니다.
+  return converted.slice(0, 8).map(({ item, partnerUrl }) => ({
     name: item.productName,
     price: item.productPrice,
     image: item.productImage,
