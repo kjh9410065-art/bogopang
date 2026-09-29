@@ -212,7 +212,7 @@ async function loadProducts(env) {
   return result;
 }
 
-// 상품 데이터를 24시간 캐시해 불필요한 API 호출을 줄입니다.
+// 상품 데이터를 1시간 캐시해 쿠팡 가격 변경을 하루 종일 늦게 반영하는 문제를 줄입니다.
 async function getProductsResponse(env, ctx) {
   const request = new Request(CACHE_URL, { method: "GET" });
   const cache = caches.default;
@@ -229,7 +229,7 @@ async function getProductsResponse(env, ctx) {
     const response = new Response(JSON.stringify(products), {
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
-        "Cache-Control": "public, max-age=86400"
+        "Cache-Control": "public, max-age=3600, s-maxage=3600"
       }
     });
 
@@ -259,7 +259,7 @@ async function refreshProducts(env) {
     const response = new Response(JSON.stringify(products), {
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
-        "Cache-Control": "public, max-age=86400"
+        "Cache-Control": "public, max-age=3600, s-maxage=3600"
       }
     });
 
