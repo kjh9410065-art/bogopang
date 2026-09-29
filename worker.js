@@ -68,8 +68,8 @@ async function makeAuthorization(method, pathWithQuery, accessKey, secretKey) {
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
-  // 쿠팡 공식 Authorization 형식에 맞춰 공백 없이 구성합니다.
-  return `CEA algorithm=HmacSHA256,access-key=${accessKey},signed-date=${signedDate},signature=${signature}`;
+  // 쿠팡 공식 Authorization 형식과 동일하게 항목 사이에 공백을 넣습니다.
+  return `CEA algorithm=HmacSHA256, access-key=${accessKey}, signed-date=${signedDate}, signature=${signature}`;
 }
 
 // 쿠팡이 요구하는 GMT 기준 yyMMddTHHmmssZ 형식으로 시간을 만듭니다.
@@ -137,32 +137,59 @@ async function loadProducts(env) {
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
 
   // Gold Box 응답 상품 배열을 안전하게 꺼냅니다.
-  const products = Array.isArray(goldbox.data) ? goldbox.data : Array.isArray(goldbox.data?.productData) ? goldbox.data.productData : [];
+  const products = Array.isArray(goldbox.data)
+    ? goldbox.data
+    : Array.isArray(goldbox.data?.productData)
+      ? goldbox.data.productData
+      : [];
 
   // 화면에 표시할 상품 수를 8개로 제한합니다.
   const selected = products.slice(0, 8);
+  const converted = [];
 
-  // 쿠팡 상품 URL을 파트너스 딥링크로 변환합니다.
-  const deeplink = await coupangRequest(
-    "POST",
-    DEEPLINK_PATH,
-    env,
-    { coupangUrls: selected.map((item) => item.productUrl).filter(Boolean) }
-  );
+  // Gold Box에서 받은 URL 대신 상품 ID로 표준 상품 URL을 만들어 변환합니다.
+  // 일부 Gold Box URL은 Deeplink API에서 "url convert failed"가 발생할 수 있기 때문입니다.
+  for (const item of selected) {
+    const originalUrl = item.productUrl;
+    const canonicalUrl = item.productId
+      ? `https://www.coupang.com/vp/products/${item.productId}`
+      : originalUrl;
 
-  // 원본 URL을 기준으로 파트너스 링크를 빠르게 찾습니다.
-  const linkMap = new Map(
-    (deeplink.data || []).map((item) => [item.originalUrl, item.shortenUrl || item.landingUrl])
-  );
+    if (!canonicalUrl) continue;
 
-  // 사이트에서 사용하는 최소 데이터만 반환합니다.
-  return selected.map((item) => ({
+    try {
+      // 상품 하나씩 변환하여 특정 상품 하나의 오류가 전체 갱신을 막지 않게 합니다.
+      const deeplink = await coupangRequest(
+        "POST",
+        DEEPLINK_PATH,
+        env,
+        { coupangUrls: [canonicalUrl] }
+      );
+
+      const link = (deeplink.data || [])[0];
+      const partnerUrl = link?.shortenUrl || link?.landingUrl;
+
+      if (partnerUrl) {
+        converted.push({
+          item,
+          originalUrl,
+          partnerUrl
+        });
+      }
+    } catch (error) {
+      // 변환할 수 없는 상품은 건너뛰고 다음 상품을 계속 처리합니다.
+      console.error("보고팡 딥링크 변환 실패:", canonicalUrl, error.message);
+    }
+  }
+
+  // 파트너스 링크가 정상적으로 생성된 상품만 사이트에 표시합니다.
+  return converted.map(({ item, partnerUrl }) => ({
     name: item.productName,
     price: item.productPrice,
     image: item.productImage,
     category: item.categoryName || "기타",
     rocket: Boolean(item.isRocket),
-    url: linkMap.get(item.productUrl) || item.productUrl
+    url: partnerUrl
   }));
 }
 
