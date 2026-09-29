@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>보고팡 | 오늘의 쿠팡 할인상품</title>
+<meta name="description" content="매일 새롭게 확인하는 쿠팡 할인상품과 특가상품">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#171717;font-family:Arial,"Noto Sans KR",sans-serif}a{text-decoration:none;color:inherit}
+.wrap{width:min(1180px,calc(100% - 32px));margin:auto}header{background:#fff;border-bottom:1px solid #e8e8ec}.head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{font-size:28px;font-weight:900}.logo b{color:#ff5a2f}.search{width:min(500px,50vw)}input{width:100%;padding:13px 16px;border:1px solid #dddfe5;border-radius:14px}
+.hero{padding:42px 0 24px}.hero h1{margin:0;font-size:clamp(28px,5vw,44px);letter-spacing:-2px}.hero p{color:#777}.cats{display:flex;gap:8px;overflow:auto;padding:8px 0 24px}.cat{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 15px;white-space:nowrap}.cat.on{background:#171717;color:#fff}
+.top{display:flex;justify-content:space-between;align-items:end}.top h2{font-size:22px}.top span{color:#888;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid #e8e9ed;border-radius:18px;overflow:hidden}.img{aspect-ratio:1;background:linear-gradient(135deg,#eee,#fafafa);display:grid;place-items:center;color:#aaa}.body{padding:14px}.badge{color:#ff4d24;font-size:12px;font-weight:900}.title{min-height:42px;font-size:14px;line-height:1.5;font-weight:700;margin-top:8px}.price{font-size:20px;font-weight:900;margin-top:10px}.discount{color:#ff4d24;margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px}.buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}footer{padding:30px 0 45px;color:#777;font-size:12px;line-height:1.7}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.wrap{width:calc(100% - 20px)}.search{display:none}.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" placeholder="상품을 검색해보세요"></div></div></header>
+<main class="wrap">
+<section class="hero"><h1>오늘 뭐 할인하지?</h1><p>매일 새롭게 확인하는 쿠팡 할인상품과 특가상품</p></section>
+<nav id="cats" class="cats"></nav>
+<div class="top"><h2 id="heading">오늘의 할인상품</h2><span>매일 오전 자동 갱신</span></div>
+<section id="grid" class="grid"></section>
+<footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</footer>
+</main>
+<script>
+/* 현재는 화면 확인용 상품을 표시하며 다음 단계에서 쿠팡 API 데이터로 교체합니다. */
+const items=[
+["쿠팡 할인상품이 표시되는 영역입니다","30%","29,900원","42,900원","생활"],
+["오늘의 특가 상품","25%","19,900원","26,500원","식품"],
+["매일 갱신되는 인기 할인상품","40%","39,800원","66,000원","디지털"],
+["주방 인기 할인상품","18%","16,400원","19,900원","주방"],
+["패션 할인상품","32%","24,900원","36,500원","패션"],
+["반려동물 인기상품","27%","21,900원","29,900원","반려동물"],
+["생활용품 특가상품","35%","12,900원","19,900원","생활"],
+["오늘의 인기 식품","22%","34,900원","44,900원","식품"]
+];
+const cats=["전체","식품","생활","디지털","주방","패션","반려동물"];let selected="전체";
+/* 카테고리와 상품을 화면에 그립니다. */
+function draw(){document.getElementById("cats").innerHTML=cats.map(c=>'<button class="cat '+(c===selected?"on":"")+'" data-c="'+c+'">'+c+"</button>").join("");document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{selected=b.dataset.c;draw()});const q=document.getElementById("q").value.toLowerCase();const list=items.filter(x=>(selected==="전체"||x[4]===selected)&&x[0].toLowerCase().includes(q));document.getElementById("heading").textContent=selected==="전체"?"오늘의 할인상품":selected;document.getElementById("grid").innerHTML=list.map(x=>'<article class="card"><div class="img">상품 이미지</div><div class="body"><div class="badge">'+x[1]+' 할인</div><div class="title">'+x[0]+'</div><div class="price"><span class="discount">'+x[1]+'</span>'+x[2]+'</div><div class="old">'+x[3]+'</div><a class="buy" href="#" onclick="return false">쿠팡에서 보기</a></div></article>').join("")}
+document.getElementById("q").oninput=draw;draw();
+</script>
+</body>
+</html>
