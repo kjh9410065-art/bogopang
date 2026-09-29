@@ -2,7 +2,7 @@
 // 쿠팡 파트너스 API를 서버에서 호출해 API 키를 브라우저에 노출하지 않습니다.
 
 const COUPANG_DOMAIN = "https://api-gateway.coupang.com";
-const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox";
+const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=8&imageSize=300x300";
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
@@ -89,10 +89,24 @@ async function coupangRequest(method, path, env, body) {
   });
 
   // 쿠팡 API의 JSON 응답을 읽습니다.
-  const data = await response.json();
+  // 쿠팡 응답을 JSON으로 읽고, JSON이 아닌 오류 응답도 안전하게 처리합니다.
+  const text = await response.text();
+  let data;
 
-  if (!response.ok || data.rCode !== "0") {
-    throw new Error(data.rMessage || `Coupang API error: ${response.status}`);
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Coupang API returned non-JSON response: ${response.status}`);
+  }
+
+  // 쿠팡 파트너스 API의 정상 응답과 오류 응답 형식을 함께 확인합니다.
+  if (!response.ok || (data.rCode !== undefined && data.rCode !== "0")) {
+    throw new Error(
+      data.rMessage ||
+      data.message ||
+      data.error ||
+      `Coupang API error: ${response.status}`
+    );
   }
 
   return data;
@@ -104,7 +118,7 @@ async function loadProducts(env) {
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
 
   // Gold Box 응답 상품 배열을 안전하게 꺼냅니다.
-  const products = Array.isArray(goldbox.data) ? goldbox.data : [];
+  const products = Array.isArray(goldbox.data) ? goldbox.data : Array.isArray(goldbox.data?.productData) ? goldbox.data.productData : [];
 
   // 화면에 표시할 상품 수를 8개로 제한합니다.
   const selected = products.slice(0, 8);
@@ -161,7 +175,7 @@ async function getProductsResponse(env, ctx) {
     console.error("보고팡 쿠팡 API 오류:", error);
 
     return new Response(
-      JSON.stringify({ error: "쿠팡 상품 정보를 가져오지 못했습니다." }),
+      JSON.stringify({ error: `쿠팡 상품 정보를 가져오지 못했습니다: ${error.message}` }),
       {
         status: 502,
         headers: { "Content-Type": "application/json; charset=UTF-8" }
