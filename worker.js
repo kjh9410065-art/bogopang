@@ -42,8 +42,10 @@ export default {
 
 // 쿠팡 API 인증에 필요한 HMAC-SHA256 서명을 생성합니다.
 async function makeAuthorization(method, pathWithQuery, accessKey, secretKey) {
+  // 쿠팡 공식 HMAC 예제와 동일하게 URI를 path와 query로 분리합니다.
+  const [path, query = ""] = pathWithQuery.split("?");
   const signedDate = formatUtcDate(new Date());
-  const message = signedDate + method + pathWithQuery;
+  const message = signedDate + method + path + query;
 
   // Secret Key를 HMAC-SHA256 키로 가져옵니다.
   const key = await crypto.subtle.importKey(
@@ -66,7 +68,8 @@ async function makeAuthorization(method, pathWithQuery, accessKey, secretKey) {
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
-  return `CEA algorithm=HmacSHA256, access-key=${accessKey}, signed-date=${signedDate}, signature=${signature}`;
+  // 쿠팡 공식 Authorization 형식에 맞춰 공백 없이 구성합니다.
+  return `CEA algorithm=HmacSHA256,access-key=${accessKey},signed-date=${signedDate},signature=${signature}`;
 }
 
 // 쿠팡이 요구하는 GMT 기준 yyMMddTHHmmssZ 형식으로 시간을 만듭니다.
@@ -89,8 +92,8 @@ async function coupangRequest(method, path, env, body) {
   const authorization = await makeAuthorization(
     method,
     path,
-    env.COUPANG_ACCESS_KEY,
-    env.COUPANG_SECRET_KEY
+    String(env.COUPANG_ACCESS_KEY || "").trim(),
+    String(env.COUPANG_SECRET_KEY || "").trim()
   );
 
   // API 요청을 전송합니다.
@@ -98,7 +101,8 @@ async function coupangRequest(method, path, env, body) {
     method,
     headers: {
       Authorization: authorization,
-      "Content-Type": "application/json;charset=UTF-8"
+      "Content-Type": "application/json;charset=UTF-8",
+      "X-EXTENDED-TIMEOUT": "90000"
     },
     body: body ? JSON.stringify(body) : undefined
   });
