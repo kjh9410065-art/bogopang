@@ -2,7 +2,7 @@
 // 쿠팡 파트너스 API를 서버에서 호출해 API 키를 브라우저에 노출하지 않습니다.
 
 const COUPANG_DOMAIN = "https://api-gateway.coupang.com";
-const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=20&imageSize=300x300";
+const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=100&imageSize=300x300";
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
@@ -133,7 +133,7 @@ async function coupangRequest(method, path, env, body) {
 
 // 오늘의 Gold Box 상품을 가져오고 파트너스 링크를 생성합니다.
 async function loadProducts(env) {
-  // 쿠팡 공식 Gold Box 상품 API를 호출합니다.
+  // 쿠팡 공식 Gold Box에서 가능한 최대 100개 상품을 가져옵니다.
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
 
   // Gold Box 응답 상품 배열을 안전하게 꺼냅니다.
@@ -143,54 +143,70 @@ async function loadProducts(env) {
       ? goldbox.data.productData
       : [];
 
-  // 딥링크 변환 실패 상품이 있어도 최종적으로 8개를 채울 수 있도록 후보를 넉넉히 확보합니다.
-  const selected = products.slice(0, 20);
+  // 모든 Gold Box 상품을 대상으로 파트너스 링크를 생성합니다.
+  const selected = products.slice(0, 100);
   const converted = [];
 
-  // Gold Box에서 받은 URL 대신 상품 ID로 표준 상품 URL을 만들어 변환합니다.
-  // 일부 Gold Box URL은 Deeplink API에서 "url convert failed"가 발생할 수 있기 때문입니다.
-  for (const item of selected) {
-    const originalUrl = item.productUrl;
-    const canonicalUrl = item.productId
-      ? `https://www.coupang.com/vp/products/${item.productId}`
-      : originalUrl;
+  // 딥링크 API는 한 번에 최대 50개씩 처리하므로 50개 단위로 묶습니다.
+  for (let i = 0; i < selected.length; i += 50) {
+    const batch = selected.slice(i, i + 50);
 
-    if (!canonicalUrl) continue;
+    // 상품 ID로 표준 쿠팡 상품 URL을 만들어 딥링크 변환에 사용합니다.
+    const urls = batch
+      .map((item) => item.productId
+        ? `https://www.coupang.com/vp/products/${item.productId}`
+        : item.productUrl
+      )
+      .filter(Boolean);
+
+    if (!urls.length) continue;
 
     try {
-      // 상품 하나씩 변환하여 특정 상품 하나의 오류가 전체 갱신을 막지 않게 합니다.
+      // 50개씩 한 번에 변환해 불필요한 API 호출을 줄입니다.
       const deeplink = await coupangRequest(
         "POST",
         DEEPLINK_PATH,
         env,
-        { coupangUrls: [canonicalUrl] }
+        { coupangUrls: urls }
       );
 
-      const link = (deeplink.data || [])[0];
-      const partnerUrl = link?.shortenUrl || link?.landingUrl;
-
-      if (partnerUrl) {
-        converted.push({
-          item,
-          originalUrl,
-          partnerUrl
-        });
+      // 원본 URL별 파트너스 링크를 저장합니다.
+      for (const link of deeplink.data || []) {
+        const partnerUrl = link.shortenUrl || link.landingUrl;
+        if (partnerUrl) {
+          converted.push([link.originalUrl, partnerUrl]);
+        }
       }
     } catch (error) {
-      // 변환할 수 없는 상품은 건너뛰고 다음 상품을 계속 처리합니다.
-      console.error("보고팡 딥링크 변환 실패:", canonicalUrl, error.message);
+      // 한 배치가 실패해도 다음 배치는 계속 처리합니다.
+      console.error("보고팡 딥링크 배치 변환 실패:", error.message);
     }
   }
 
-  // 파트너스 링크가 정상적으로 생성된 상품 중 최대 8개만 사이트에 표시합니다.
-  return converted.slice(0, 8).map(({ item, partnerUrl }) => ({
-    name: item.productName,
-    price: item.productPrice,
-    image: item.productImage,
-    category: item.categoryName || "기타",
-    rocket: Boolean(item.isRocket),
-    url: partnerUrl
-  }));
+  // 표준 URL과 Gold Box 원본 URL을 모두 기준으로 매칭합니다.
+  const linkMap = new Map(converted);
+  const result = [];
+
+  for (const item of selected) {
+    const canonicalUrl = item.productId
+      ? `https://www.coupang.com/vp/products/${item.productId}`
+      : item.productUrl;
+
+    const partnerUrl = linkMap.get(canonicalUrl) || linkMap.get(item.productUrl);
+    if (!partnerUrl) continue;
+
+    // 파트너스 링크가 생성된 모든 Gold Box 상품을 반환합니다.
+    result.push({
+      name: item.productName,
+      price: item.productPrice,
+      image: item.productImage,
+      category: item.categoryName || "기타",
+      rocket: Boolean(item.isRocket),
+      url: partnerUrl
+    });
+  }
+
+  return result;
 }
 
 // 상품 데이터를 24시간 캐시해 불필요한 API 호출을 줄입니다.
