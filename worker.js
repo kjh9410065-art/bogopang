@@ -264,7 +264,7 @@ async function loadTrendingKeywords() {
 
     const xml = await response.text();
     const keywords = [];
-    const itemMatches = xml.matchAll(/<item>[\\s\\S]*?<title>([\\s\\S]*?)<\\/title>[\\s\\S]*?<\\/item>/g);
+    const itemMatches = xml.matchAll(/<item>[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<\/item>/g);
 
     for (const match of itemMatches) {
       const keyword = decodeXml(match[1]).trim();
