@@ -3,218 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>보고팡 | 오늘의 쿠팡 할인상품</title>
-<meta name="description" content="매일 새롭게 확인하는 쿠팡 할인상품과 특가상품">
+<title>보고팡 | 오늘 뭐 살까?</title>
+<meta name="description" content="오늘 확인할 만한 쿠팡 특가상품과 인기검색 상품을 빠르게 찾아보세요.">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#171717;font-family:Arial,"Noto Sans KR",sans-serif}a{text-decoration:none;color:inherit}
-.wrap{width:min(1180px,calc(100% - 32px));margin:auto}header{background:#fff;border-bottom:1px solid #e8e8ec}.head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{font-size:28px;font-weight:900}.logo b{color:#ff5a2f}.search{width:min(500px,50vw)}input{width:100%;padding:13px 16px;border:1px solid #dddfe5;border-radius:14px}
-.hero{padding:42px 0 24px}.hero h1{margin:0;font-size:clamp(28px,5vw,44px);letter-spacing:-2px}.hero p{color:#777}.tabs{display:flex;gap:8px;overflow:auto;padding:8px 0 14px}.tab{border:1px solid #ddd;background:#fff;border-radius:12px;padding:11px 18px;white-space:nowrap;font-weight:800;cursor:pointer}.tab.on{background:#171717;color:#fff}.cats{display:flex;gap:8px;overflow:auto;padding:8px 0 24px}.cat{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 15px;white-space:nowrap}.cat.on{background:#171717;color:#fff}
-.top{display:flex;justify-content:space-between;align-items:end}.top h2{font-size:22px}.top span{color:#888;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid #e8e9ed;border-radius:18px;overflow:hidden}.img{aspect-ratio:1;background:linear-gradient(135deg,#eee,#fafafa);display:grid;place-items:center;color:#aaa}.body{padding:14px}.badge{color:#ff4d24;font-size:12px;font-weight:900}.title{min-height:42px;font-size:14px;line-height:1.5;font-weight:700;margin-top:8px}.price{font-size:20px;font-weight:900;margin-top:10px}.discount{color:#ff4d24;margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px}.buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}footer{padding:30px 0 45px;color:#777;font-size:12px;line-height:1.7}
-@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.wrap{width:calc(100% - 20px)}.search{display:none}.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+*{box-sizing:border-box}
+:root{--bg:#f6f7f9;--text:#171717;--muted:#73757d;--line:#e7e8ec;--accent:#ff5a2f}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Noto Sans KR",sans-serif}
+a{text-decoration:none;color:inherit}button,input{font:inherit}
+.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.head{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{font-size:27px;font-weight:900;letter-spacing:-1.5px}.logo b{color:var(--accent)}
+.search{width:min(500px,50vw);position:relative}
+.search input{width:100%;padding:12px 16px;border:1px solid #dddfe5;border-radius:14px;background:#fafafa;outline:0}
+.search input:focus{border-color:#b9bbc2;background:#fff}
+.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}
+.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}
+.preview{margin:4px 0 14px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}
+.tabs,.filters{display:flex;gap:8px;overflow:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar,.filters::-webkit-scrollbar{display:none}
+.tabs{padding:6px 0 12px}
+.tab,.filter{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 15px;white-space:nowrap;font-weight:800;cursor:pointer}
+.tab.on,.filter.on{background:#171717;color:#fff;border-color:#171717}
+.controls{padding:4px 0 16px}.control-label{font-size:12px;font-weight:800;color:#777;margin:0 0 7px}
+.filters{padding-bottom:8px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:8px 0 14px}
+.section-head h2{margin:0;font-size:23px;letter-spacing:-1px}.section-head p{margin:5px 0 0;color:#888;font-size:13px}
+.count{color:#888;font-size:12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding-bottom:30px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.img{aspect-ratio:1;background:#f1f2f4;display:grid;place-items:center;overflow:hidden}.img img{width:100%;height:100%;object-fit:contain}
+.body{padding:14px}.badge{min-height:18px;color:var(--accent);font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.keyword{display:inline-block;margin-left:5px;color:#777;font-weight:700}
+.title{min-height:44px;font-size:14px;line-height:1.5;font-weight:700;margin-top:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.price{font-size:20px;font-weight:900;margin-top:10px;letter-spacing:-.4px}.discount{color:var(--accent);margin-right:7px}
+.old{color:#aaa;text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:500}
+.buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}
+.empty{grid-column:1/-1;text-align:center;color:#777;padding:55px 0;background:#fff;border:1px solid var(--line);border-radius:18px}
+footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){
+.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}
+.search{display:block;width:170px}.search input{padding:10px 12px;font-size:13px}
+.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}
+.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.section-head h2{font-size:20px}
+}
 </style>
 </head>
 <body>
-<header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" placeholder="상품을 검색해보세요"></div></div></header>
+<header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘의 할인은?</h1><p>매일 새롭게 확인하는 쿠팡 할인상품과 특가상품</p></section>
-<nav id="tabs" class="tabs"></nav><nav id="cats" class="cats"></nav>
-<div class="top"><div><h2 id="heading">오늘의 특가</h2><span id="description">쿠팡에서 오늘 확인할 수 있는 특가상품</span></div><span>자동 갱신 준비됨</span></div>
-<section id="grid" class="grid"></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>지금 확인할 만한 상품을 목적별로 빠르게 찾아보세요.</p></section>
+<div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
+<nav id="tabs" class="tabs" aria-label="상품 종류"></nav>
+<section class="controls">
+<div class="control-label">가격대</div><nav id="prices" class="filters" aria-label="가격대 필터"></nav>
+<div id="category-label" class="control-label" style="margin-top:8px" hidden>카테고리</div><nav id="cats" class="filters" aria-label="카테고리 필터"></nav>
+</section>
+<section>
+<div class="section-head"><div><h2 id="heading">오늘의 특가</h2><p id="description">쿠팡에서 확인할 수 있는 특가상품</p></div><span id="count" class="count"></span></div>
+<section id="grid" class="grid" aria-live="polite"></section>
+</section>
 <footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</footer>
 </main>
 <script>
 // 목적별 상품 데이터를 분리해 탭으로 표시합니다.
-let productData = {
-  specialDeals: [],
-  trendingSearch: [],
-  popularProducts: [],
-  rocketProducts: []
-};
-// 상품 갱신을 중지한 상태에서도 새 탭 구조를 확인할 수 있는 임시 샘플 데이터입니다.
-// 구조 확인용 미리보기 모드입니다. 실제 상품 API가 정상 응답하면 실제 데이터가 우선 표시됩니다.
-const PREVIEW_MODE = true;
+let productData={specialDeals:[],trendingSearch:[],popularProducts:[],rocketProducts:[]};
 
-const SAMPLE_DATA = {
-  specialDeals: [
-    {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"https://via.placeholder.com/500x500?text=Special",category:"생활용품",rocket:true,keyword:null,source:"오늘의 특가",url:"#"},
-    {id:"sample-2",name:"인기 특가 상품 예시",price:45900,originalPrice:59900,discountRate:23,image:"https://via.placeholder.com/500x500?text=Deal",category:"가전",rocket:false,keyword:null,source:"오늘의 특가",url:"#"}
-  ],
-  trendingSearch: [
-    {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"https://via.placeholder.com/500x500?text=Trend",category:"식품",rocket:true,keyword:"검색어 A",source:"인기검색",url:"#"},
-    {id:"sample-4",name:"인기검색 상품 예시",price:32900,originalPrice:39900,discountRate:18,image:"https://via.placeholder.com/500x500?text=Search",category:"디지털",rocket:false,keyword:"검색어 B",source:"인기검색",url:"#"}
-  ],
-  popularProducts: [
-    {id:"sample-5",name:"인기상품 예시",price:27900,originalPrice:null,discountRate:null,image:"https://via.placeholder.com/500x500?text=Popular",category:"생활용품",rocket:true,keyword:null,source:"인기상품",url:"#"}
-  ],
-  rocketProducts: [
-    {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"https://via.placeholder.com/500x500?text=Rocket",category:"생활용품",rocket:true,keyword:null,source:"로켓배송",url:"#"},
-    {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"https://via.placeholder.com/500x500?text=Rocket",category:"식품",rocket:true,keyword:"검색어 A",source:"로켓배송",url:"#"}
-  ]
-};
+// 자동 갱신이 중지된 동안 화면 구조를 확인할 수 있도록 미리보기 데이터를 사용합니다.
+// 실제 API가 상품을 반환하면 실제 데이터가 우선합니다.
+const PREVIEW_MODE=true;
 
-let activeTab = "specialDeals";
-let selectedCategory = "전체";
+// 미리보기용 데이터이며 실제 판매 상품이나 인기순위를 의미하지 않습니다.
+const SAMPLE_DATA={
+specialDeals:[
+{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"https://via.placeholder.com/500x500?text=Special",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
+{id:"sample-2",name:"특가 상품 예시",price:45900,originalPrice:59900,discountRate:23,image:"https://via.placeholder.com/500x500?text=Deal",category:"가전",rocket:false,keyword:null,source:"미리보기",url:"#"}],
+trendingSearch:[
+{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"https://via.placeholder.com/500x500?text=Trend",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"},
+{id:"sample-4",name:"검색 키워드 상품 예시",price:32900,originalPrice:39900,discountRate:18,image:"https://via.placeholder.com/500x500?text=Search",category:"디지털",rocket:false,keyword:"검색어 예시",source:"미리보기",url:"#"}],
+popularProducts:[],
+rocketProducts:[
+{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"https://via.placeholder.com/500x500?text=Rocket",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
+{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"https://via.placeholder.com/500x500?text=Rocket",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
-// 현재 선택된 탭의 상품 목록을 반환합니다.
-function getActiveItems() {
-  return productData[activeTab] || [];
-}
+let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체";
+
+// 탭의 제목과 설명을 정의합니다.
+const TAB_META={
+specialDeals:["오늘의 특가","쿠팡에서 확인할 수 있는 특가상품"],
+trendingSearch:["지금 많이 찾는 상품","오늘 많이 검색된 키워드에서 찾은 상품"],
+popularProducts:["인기상품","공식 데이터로 확인 가능한 인기상품"],
+rocketProducts:["로켓배송","로켓배송이 가능한 상품"]};
+
+// 가격을 안전하게 숫자로 변환합니다.
+function parsePrice(value){const number=Number(String(value??"").replace(/,/g,""));return Number.isFinite(number)?number:null}
+
+// 화면에 표시할 문자열의 HTML 특수문자를 이스케이프합니다.
+function escapeHtml(value){return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+
+// 현재 탭의 상품 목록을 반환합니다.
+function getActiveItems(){return Array.isArray(productData[activeTab])?productData[activeTab]:[]}
+
+// 실제 상품이 있는 탭만 표시합니다.
+function getAvailableTabs(){return Object.keys(TAB_META).filter(key=>Array.isArray(productData[key])&&productData[key].length>0)}
+
+// 현재 탭이 비어 있으면 실제 상품이 있는 첫 탭으로 이동합니다.
+function ensureActiveTab(){const tabs=getAvailableTabs();if(!tabs.length)return;if(!tabs.includes(activeTab)){activeTab=tabs[0];selectedCategory="전체";selectedPrice="전체"}}
 
 // 상품 탭을 그립니다.
-function drawTabs() {
-  const tabs = [
-    ["specialDeals", "오늘의 특가"],
-    ["trendingSearch", "인기검색"],
-    ["popularProducts", "인기상품"],
-    ["rocketProducts", "로켓배송"]
-  ];
-
-  document.getElementById("tabs").innerHTML = tabs
-    .map(([key, label]) =>
-      '<button class="tab ' + (activeTab === key ? "on" : "") +
-      '" data-tab="' + key + '">' + label + "</button>"
-    )
-    .join("");
-
-  document.querySelectorAll("[data-tab]").forEach((button) => {
-    button.onclick = () => {
-      activeTab = button.dataset.tab;
-      selectedCategory = "전체";
-      draw();
-    };
-  });
+function drawTabs(){
+const tabs=getAvailableTabs();
+document.getElementById("tabs").innerHTML=tabs.map(key=>'<button class="tab '+(activeTab===key?"on":"")+'" data-tab="'+key+'">'+TAB_META[key][0]+"</button>").join("");
+document.querySelectorAll("[data-tab]").forEach(button=>{button.onclick=()=>{activeTab=button.dataset.tab;selectedCategory="전체";selectedPrice="전체";draw()}})
 }
 
-// 현재 탭의 카테고리 필터를 그립니다.
-function drawCategories(items) {
-  const categories = ["전체", ...new Set(items.map((item) => item.category).filter(Boolean))];
-
-  document.getElementById("cats").innerHTML = categories
-    .map((category) =>
-      '<button class="cat ' + (category === selectedCategory ? "on" : "") +
-      '" data-c="' + category + '">' + category + "</button>"
-    )
-    .join("");
-
-  document.querySelectorAll("[data-c]").forEach((button) => {
-    button.onclick = () => {
-      selectedCategory = button.dataset.c;
-      draw();
-    };
-  });
+// 가격대 필터를 그립니다.
+function drawPriceFilters(){
+const prices=["전체","1만원 이하","3만원 이하","5만원 이하"];
+document.getElementById("prices").innerHTML=prices.map(label=>'<button class="filter '+(label===selectedPrice?"on":"")+'" data-price="'+label+'">'+label+"</button>").join("");
+document.querySelectorAll("[data-price]").forEach(button=>{button.onclick=()=>{selectedPrice=button.dataset.price;draw()}})
 }
 
-// 현재 탭에 맞는 제목과 설명을 표시합니다.
-function drawHeader() {
-  const headers = {
-    specialDeals: ["오늘의 특가", "쿠팡에서 오늘 확인할 수 있는 특가상품"],
-    trendingSearch: ["인기검색", "오늘 많이 검색된 키워드에서 찾은 상품"],
-    popularProducts: ["인기상품", "공식 데이터로 확인 가능한 인기상품"],
-    rocketProducts: ["로켓배송", "로켓배송이 가능한 상품"]
-  };
+// 현재 탭에 실제로 존재하는 카테고리만 표시합니다.
+function drawCategories(items){
+const categories=["전체",...new Set(items.map(item=>item.category).filter(Boolean))];
+const label=document.getElementById("category-label"),cats=document.getElementById("cats");
+if(categories.length<=1){label.hidden=true;cats.innerHTML="";return}
+label.hidden=false;
+cats.innerHTML=categories.map(category=>'<button class="filter '+(category===selectedCategory?"on":"")+'" data-c="'+escapeHtml(category)+'">'+escapeHtml(category)+"</button>").join("");
+document.querySelectorAll("[data-c]").forEach(button=>{button.onclick=()=>{selectedCategory=button.dataset.c;draw()}})
+}
 
-  const [title, description] = headers[activeTab];
-  document.getElementById("heading").textContent = title;
-  document.getElementById("description").textContent = description;
+// 현재 탭의 제목과 설명을 표시합니다.
+function drawHeader(){const [title,description]=TAB_META[activeTab]||["상품","상품을 확인해보세요."];document.getElementById("heading").textContent=title;document.getElementById("description").textContent=description}
+
+// 선택된 가격대 조건을 검사합니다.
+function matchesPrice(price){
+const value=parsePrice(price);
+if(selectedPrice==="전체")return true;
+if(value==null)return false;
+const limits={"1만원 이하":10000,"3만원 이하":30000,"5만원 이하":50000};
+return value<=limits[selectedPrice];
+}
+
+// 검색, 카테고리, 가격 조건에 맞는 상품을 반환합니다.
+function getFilteredItems(){
+const query=document.getElementById("q").value.toLowerCase().trim();
+return getActiveItems().filter(item=>{
+const name=String(item.name||"").toLowerCase(),keyword=String(item.keyword||"").toLowerCase();
+return (!query||name.includes(query)||keyword.includes(query))&&(selectedCategory==="전체"||item.category===selectedCategory)&&matchesPrice(item.price);
+})
 }
 
 // 상품 카드 목록을 그립니다.
-function draw() {
-  const items = getActiveItems();
-  drawTabs();
-  drawCategories(items);
-  drawHeader();
-
-  const query = document.getElementById("q").value.toLowerCase().trim();
-  const list = items.filter(
-    (item) =>
-      (selectedCategory === "전체" || item.category === selectedCategory) &&
-      item.name.toLowerCase().includes(query)
-  );
-
-  const grid = document.getElementById("grid");
-
-  if (!list.length) {
-    grid.innerHTML =
-      '<p style="grid-column:1/-1;text-align:center;color:#777;padding:40px 0">' +
-      (activeTab === "popularProducts"
-        ? "현재 공식 데이터로 제공되는 인기상품이 없습니다."
-        : "해당 조건의 상품이 없습니다.") +
-      "</p>";
-    return;
-  }
-
-  grid.innerHTML = list.map((item) => {
-    const discount = item.discountRate != null
-      ? '<span class="discount">' + Number(item.discountRate) + '%</span>'
-      : "";
-    const original = item.originalPrice && Number(item.originalPrice) > Number(item.price)
-      ? ' <span class="old">' + Number(item.originalPrice).toLocaleString("ko-KR") + "원</span>"
-      : "";
-
-    return '<article class="card">' +
-      '<div class="img"><img src="' + item.image +
-      '" alt="' + item.name.replace(/"/g, "&quot;") +
-      '" loading="lazy" style="width:100%;height:100%;object-fit:contain"></div>' +
-      '<div class="body">' +
-      '<div class="badge">' +
-      (item.rocket ? "로켓배송 · " : "") +
-      item.source +
-      "</div>" +
-      '<div class="title">' + item.name + "</div>" +
-      '<div class="price">' + discount +
-      Number(item.price).toLocaleString("ko-KR") + "원" + original + "</div>" +
-      '<a class="buy" href="' + item.url +
-      '" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a>' +
-      "</div></article>";
-  }).join("");
+function drawGrid(){
+const grid=document.getElementById("grid"),list=getFilteredItems();
+document.getElementById("count").textContent=list.length?list.length+"개 상품":"";
+if(!list.length){grid.innerHTML='<div class="empty">'+(activeTab==="popularProducts"?"현재 공식 데이터로 제공되는 인기상품이 없습니다.":"현재 조건에 맞는 상품이 없습니다.")+"</div>";return}
+grid.innerHTML=list.map(item=>{
+const price=parsePrice(item.price),originalPrice=parsePrice(item.originalPrice);
+const rate=item.discountRate!=null?Number(item.discountRate):null;
+const discount=Number.isFinite(rate)?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";
+const original=originalPrice!=null&&price!=null&&originalPrice>price?'<span class="old">'+originalPrice.toLocaleString("ko-KR")+"원</span>":"";
+const keyword=item.keyword?'<span class="keyword">#'+escapeHtml(item.keyword)+"</span>":"";
+const source=escapeHtml(item.source||"쿠팡 데이터"),name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
+return '<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy" onerror="this.style.display=\'none\'"></div><div class="body"><div class="badge">'+(item.rocket?"로켓배송 · ":"")+source+keyword+'</div><div class="title">'+name+'</div><div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+original+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
+}).join("")
 }
+
+// 현재 상태에 맞게 전체 화면을 다시 그립니다.
+function draw(){ensureActiveTab();drawTabs();drawPriceFilters();drawCategories(getActiveItems());drawHeader();drawGrid()}
 
 // 쿠팡 상품 API에서 목적별 상품 데이터를 가져옵니다.
-async function loadProducts() {
-  const grid = document.getElementById("grid");
-  grid.innerHTML =
-    '<p style="grid-column:1/-1;text-align:center;color:#777">상품을 불러오는 중...</p>';
-
-  try {
-    const response = await fetch("/api/products");
-    const data = await response.json();
-
-    if (!response.ok || !data || Array.isArray(data)) {
-      throw new Error(data?.error || "상품 정보를 불러오지 못했습니다.");
-    }
-
-    productData = {
-      specialDeals: Array.isArray(data.specialDeals) ? data.specialDeals : [],
-      trendingSearch: Array.isArray(data.trendingSearch) ? data.trendingSearch : [],
-      popularProducts: Array.isArray(data.popularProducts) ? data.popularProducts : [],
-      rocketProducts: Array.isArray(data.rocketProducts) ? data.rocketProducts : []
-    };
-
-    // 자동 갱신을 중지한 동안에는 임시 샘플로 탭 UI를 확인할 수 있게 합니다.
-    const hasProducts = Object.values(productData).some((list) => list.length > 0);
-    if (!hasProducts) productData = SAMPLE_DATA;
-
-    draw();
-  } catch (error) {
-    // 상품 API가 현재 중지되어 있어도 탭 구조를 확인할 수 있도록 미리보기 데이터를 표시합니다.
-    if (PREVIEW_MODE) {
-      productData = SAMPLE_DATA;
-      draw();
-      console.warn("미리보기 데이터 사용:", error.message);
-      return;
-    }
-
-    grid.innerHTML =
-      '<p style="grid-column:1/-1;text-align:center;color:#777">' +
-      (error.message || "상품 정보를 불러오지 못했습니다.") +
-      "</p>";
-    console.error(error);
-  }
+async function loadProducts(){
+const grid=document.getElementById("grid");
+grid.innerHTML='<div class="empty">상품을 불러오는 중...</div>';
+try{
+const response=await fetch("/api/products"),data=await response.json();
+if(!response.ok||!data||Array.isArray(data))throw new Error(data?.error||"상품 정보를 불러오지 못했습니다.");
+productData={
+specialDeals:Array.isArray(data.specialDeals)?data.specialDeals:[],
+trendingSearch:Array.isArray(data.trendingSearch)?data.trendingSearch:[],
+popularProducts:Array.isArray(data.popularProducts)?data.popularProducts:[],
+rocketProducts:Array.isArray(data.rocketProducts)?data.rocketProducts:[]};
+const hasProducts=Object.values(productData).some(list=>list.length>0);
+if(!hasProducts&&PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false}
+draw();
+}catch(error){
+if(PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false;draw();console.warn("미리보기 데이터 사용:",error.message);return}
+grid.innerHTML='<div class="empty">'+escapeHtml(error.message||"상품 정보를 불러오지 못했습니다.")+"</div>";
+console.error(error)
+}
 }
 
-// 검색어가 바뀌면 현재 탭을 즉시 필터링합니다.
-document.getElementById("q").oninput = draw;
+// 검색어가 바뀌면 현재 조건을 즉시 필터링합니다.
+document.getElementById("q").oninput=draw;
+
+// 초기 화면을 상품 API와 함께 로드합니다.
 loadProducts();
 </script>
 </body>
