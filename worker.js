@@ -4,6 +4,8 @@
 const COUPANG_DOMAIN = "https://api-gateway.coupang.com";
 const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/goldbox?limit=100&imageSize=300x300";
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
+const SEARCH_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/search";
+const TREND_RSS_URL = "https://trends.google.com/trending/rss?geo=KR";
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
 export default {
@@ -133,36 +135,58 @@ async function coupangRequest(method, path, env, body) {
 
 // 오늘의 Gold Box 상품을 가져오고 파트너스 링크를 생성합니다.
 async function loadProducts(env) {
-  // 쿠팡 공식 Gold Box에서 가능한 최대 100개 상품을 가져옵니다.
+  // 쿠팡 공식 Gold Box 상품을 가져옵니다.
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
-
-  // Gold Box 응답 상품 배열을 안전하게 꺼냅니다.
-  const products = Array.isArray(goldbox.data)
+  const goldboxProducts = Array.isArray(goldbox.data)
     ? goldbox.data
     : Array.isArray(goldbox.data?.productData)
       ? goldbox.data.productData
       : [];
 
-  // 모든 Gold Box 상품을 대상으로 파트너스 링크를 생성합니다.
-  const selected = products.slice(0, 100);
+  // 별도 인기검색 데이터에서 오늘의 인기 검색어를 가져옵니다.
+  const trendKeywords = await loadTrendingKeywords();
+
+  // 인기 검색어 상위 5개만 사용해 쿠팡 상품 검색 API 호출량을 제한합니다.
+  const popularProducts = [];
+  for (const keyword of trendKeywords.slice(0, 5)) {
+    try {
+      // 검색어마다 쿠팡 검색 결과 상위 2개를 가져옵니다.
+      const query = `?keyword=${encodeURIComponent(keyword)}&limit=2`;
+      const result = await coupangRequest("GET", SEARCH_PATH + query, env);
+      const products = Array.isArray(result.data?.productData) ? result.data.productData : [];
+      popularProducts.push(...products.map((item) => ({ ...item, trendKeyword: keyword })));
+    } catch (error) {
+      // 특정 인기검색어가 상품으로 연결되지 않아도 나머지는 계속 처리합니다.
+      console.error("보고팡 인기검색 상품 조회 실패:", keyword, error.message);
+    }
+  }
+
+  // Gold Box와 인기검색 상품을 합치고 상품 ID 중복을 제거합니다.
+  const merged = [...goldboxProducts, ...popularProducts];
+  const unique = [];
+  const seen = new Set();
+
+  for (const item of merged) {
+    const key = String(item.productId || item.productUrl || item.productName);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(item);
+  }
+
+  // 모든 후보 상품을 파트너스 링크로 변환합니다.
   const converted = [];
-
-  // 딥링크 API는 한 번에 최대 50개씩 처리하므로 50개 단위로 묶습니다.
-  for (let i = 0; i < selected.length; i += 50) {
-    const batch = selected.slice(i, i + 50);
-
-    // 상품 ID로 표준 쿠팡 상품 URL을 만들어 딥링크 변환에 사용합니다.
+  for (let i = 0; i < unique.length; i += 50) {
+    const batch = unique.slice(i, i + 50);
     const urls = batch
       .map((item) => item.productId
         ? `https://www.coupang.com/vp/products/${item.productId}`
-        : item.productUrl
-      )
+        : item.productUrl)
       .filter(Boolean);
 
     if (!urls.length) continue;
 
     try {
-      // 50개씩 한 번에 변환해 불필요한 API 호출을 줄입니다.
+      // 딥링크 API는 50개 단위로 처리합니다.
       const deeplink = await coupangRequest(
         "POST",
         DEEPLINK_PATH,
@@ -170,46 +194,76 @@ async function loadProducts(env) {
         { coupangUrls: urls }
       );
 
-      // 원본 URL별 파트너스 링크를 저장합니다.
       for (const link of deeplink.data || []) {
         const partnerUrl = link.shortenUrl || link.landingUrl;
-        if (partnerUrl) {
-          converted.push([link.originalUrl, partnerUrl]);
-        }
+        if (partnerUrl) converted.push([link.originalUrl, partnerUrl]);
       }
     } catch (error) {
-      // 한 배치가 실패해도 다음 배치는 계속 처리합니다.
+      // 한 배치가 실패해도 다른 상품 배치는 계속 처리합니다.
       console.error("보고팡 딥링크 배치 변환 실패:", error.message);
     }
   }
 
-  // 표준 URL과 Gold Box 원본 URL을 모두 기준으로 매칭합니다.
   const linkMap = new Map(converted);
   const result = [];
 
-  for (const item of selected) {
+  for (const item of unique) {
     const canonicalUrl = item.productId
       ? `https://www.coupang.com/vp/products/${item.productId}`
       : item.productUrl;
-
     const partnerUrl = linkMap.get(canonicalUrl) || linkMap.get(item.productUrl);
     if (!partnerUrl) continue;
 
-    // 파트너스 링크가 생성된 모든 Gold Box 상품을 반환합니다.
+    // 쿠팡 공식 상품 데이터만 사이트에 표시합니다.
     result.push({
       name: item.productName,
       price: item.productPrice,
-      // 쿠팡 응답에 원가/할인율이 포함되는 경우 그대로 전달하고, 없는 값은 임의로 계산하지 않습니다.
       originalPrice: item.originalPrice ?? item.productOriginalPrice ?? item.listPrice ?? null,
       discountRate: item.discountRate ?? item.discountRatePercent ?? null,
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
+      keyword: item.trendKeyword || null,
+      source: item.trendKeyword ? "인기검색" : "Gold Box",
       url: partnerUrl
     });
   }
 
   return result;
+}
+
+// 별도 인기검색 데이터에서 한국의 오늘 인기 검색어를 가져옵니다.
+async function loadTrendingKeywords() {
+  try {
+    // Google Trends의 한국 일간 인기 검색 RSS를 읽습니다.
+    const response = await fetch(TREND_RSS_URL);
+    if (!response.ok) throw new Error(`Trend source error: ${response.status}`);
+
+    const xml = await response.text();
+    const keywords = [];
+    const itemMatches = xml.matchAll(/<item>[\\s\\S]*?<title>([\\s\\S]*?)<\\/title>[\\s\\S]*?<\\/item>/g);
+
+    for (const match of itemMatches) {
+      const keyword = decodeXml(match[1]).trim();
+      if (keyword && !keywords.includes(keyword)) keywords.push(keyword);
+    }
+
+    return keywords.slice(0, 10);
+  } catch (error) {
+    // 인기검색 소스가 일시적으로 실패해도 Gold Box는 정상적으로 표시합니다.
+    console.error("보고팡 인기검색 데이터 실패:", error.message);
+    return [];
+  }
+}
+
+// XML에서 사용하는 기본 특수문자를 복원합니다.
+function decodeXml(value) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 }
 
 // 상품 데이터를 1시간 캐시해 쿠팡 가격 변경을 하루 종일 늦게 반영하는 문제를 줄입니다.
