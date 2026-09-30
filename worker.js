@@ -7,6 +7,8 @@ const GOLD_BOX_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/go
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
 const SEARCH_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/search";
 const TREND_RSS_URL = "https://trends.google.com/trending/rss?geo=KR";
+const TREND_KEYWORD_LIMIT = 8;
+const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
 export default {
@@ -136,7 +138,7 @@ async function coupangRequest(method, path, env, body) {
 
 // 오늘의 특가, 인기검색, 인기상품, 로켓배송을 목적별로 분리해 반환합니다.
 async function loadProducts(env) {
-  // 쿠팡 공식 Gold Box 상품을 가져옵니다.
+  // Gold Box는 별도의 공식 특가 데이터이므로 한 번만 조회합니다.
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
   const goldboxProducts = Array.isArray(goldbox.data)
     ? goldbox.data
@@ -144,23 +146,35 @@ async function loadProducts(env) {
       ? goldbox.data.productData
       : [];
 
-  // Google Trends에서 별도 인기검색 키워드를 가져옵니다.
-  const trendKeywords = await loadTrendingKeywords();
+  // 외부 트렌드에서 먼저 상품 탐색용 키워드를 선정합니다.
+  const trendSignals = await loadTrendSignals(env);
+  const trendKeywords = trendSignals.map((item) => item.keyword).slice(0, TREND_KEYWORD_LIMIT);
 
-  // 인기검색어별로 쿠팡 공식 상품 검색 API를 호출합니다.
+  // 선정된 키워드에 대해서만 쿠팡 Search API를 호출합니다.
+  // 사용자가 사이트에서 검색할 때는 이 API를 다시 호출하지 않습니다.
   const trendingRaw = [];
-  for (const keyword of trendKeywords.slice(0, 5)) {
+  for (const signal of trendSignals.slice(0, TREND_KEYWORD_LIMIT)) {
     try {
-      const query = `?keyword=${encodeURIComponent(keyword)}&limit=2`;
+      const query =
+        `?keyword=${encodeURIComponent(signal.keyword)}&limit=${COUPANG_SEARCH_PRODUCT_LIMIT}`;
       const result = await coupangRequest("GET", SEARCH_PATH + query, env);
-      const products = Array.isArray(result.data?.productData) ? result.data.productData : [];
-      trendingRaw.push(...products.map((item) => ({ ...item, trendKeyword: keyword })));
+      const products = Array.isArray(result.data?.productData)
+        ? result.data.productData
+        : [];
+
+      trendingRaw.push(
+        ...products.map((item) => ({
+          ...item,
+          trendKeyword: signal.keyword,
+          trendSource: signal.source
+        }))
+      );
     } catch (error) {
-      console.error("보고팡 인기검색 상품 조회 실패:", keyword, error.message);
+      console.error("보고팡 트렌드 상품 조회 실패:", signal.keyword, error.message);
     }
   }
 
-  // 각 탭 내부에서만 상품 ID 기준으로 중복을 제거합니다.
+  // 상품 ID 기준으로 전체 결과를 한 번에 중복 제거합니다.
   const uniqueById = (products) => {
     const unique = [];
     const seen = new Set();
@@ -175,23 +189,31 @@ async function loadProducts(env) {
     return unique;
   };
 
-  // 공식 데이터가 없는 '인기상품'은 임의로 만들지 않습니다.
+  // 공식 데이터가 없는 인기순위는 임의로 만들지 않습니다.
   const popularRaw = [];
 
-  // 로켓배송은 Coupang API의 공식 isRocket 필드만 사용합니다.
+  // 로켓배송은 쿠팡 공식 isRocket 필드만 사용합니다.
   const rocketRaw = uniqueById([...goldboxProducts, ...trendingRaw])
     .filter((item) => item.isRocket === true);
 
-  // 모든 탭의 상품을 합쳐 한 번에 딥링크로 변환합니다.
-  const allRaw = uniqueById([...goldboxProducts, ...trendingRaw, ...popularRaw, ...rocketRaw]);
+  // 모든 상품을 통합한 뒤 딥링크를 배치로 한 번에 처리합니다.
+  const allRaw = uniqueById([
+    ...goldboxProducts,
+    ...trendingRaw,
+    ...popularRaw,
+    ...rocketRaw
+  ]);
+
   const converted = [];
 
   for (let i = 0; i < allRaw.length; i += 50) {
     const batch = allRaw.slice(i, i + 50);
     const urls = batch
-      .map((item) => item.productId
-        ? `https://www.coupang.com/vp/products/${item.productId}`
-        : item.productUrl)
+      .map((item) =>
+        item.productId
+          ? `https://www.coupang.com/vp/products/${item.productId}`
+          : item.productUrl
+      )
       .filter(Boolean);
 
     if (!urls.length) continue;
@@ -215,7 +237,7 @@ async function loadProducts(env) {
 
   const linkMap = new Map(converted);
 
-  // 개별 상품을 사이트에서 사용하는 공통 구조로 변환합니다.
+  // 쿠팡 원본 데이터를 보고팡 공통 상품 구조로 변환합니다.
   const toSiteProduct = (item, source) => {
     const canonicalUrl = item.productId
       ? `https://www.coupang.com/vp/products/${item.productId}`
@@ -228,12 +250,20 @@ async function loadProducts(env) {
       id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
       price: item.productPrice,
-      originalPrice: item.originalPrice ?? item.productOriginalPrice ?? item.listPrice ?? null,
-      discountRate: item.discountRate ?? item.discountRatePercent ?? null,
+      originalPrice:
+        item.originalPrice ??
+        item.productOriginalPrice ??
+        item.listPrice ??
+        null,
+      discountRate:
+        item.discountRate ??
+        item.discountRatePercent ??
+        null,
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
       keyword: item.trendKeyword || null,
+      trendSource: item.trendSource || null,
       source,
       url: partnerUrl
     };
@@ -243,42 +273,139 @@ async function loadProducts(env) {
     specialDeals: uniqueById(goldboxProducts)
       .map((item) => toSiteProduct(item, "오늘의 특가"))
       .filter(Boolean),
+
     trendingSearch: uniqueById(trendingRaw)
-      .map((item) => toSiteProduct(item, "인기검색"))
+      .map((item) => toSiteProduct(item, "오늘의 관심 키워드"))
       .filter(Boolean),
-    popularProducts: uniqueById(popularRaw)
-      .map((item) => toSiteProduct(item, "인기상품"))
-      .filter(Boolean),
+
+    popularProducts: [],
+
     rocketProducts: rocketRaw
       .map((item) => toSiteProduct(item, "로켓배송"))
-      .filter(Boolean)
+      .filter(Boolean),
+
+    // 갱신 시 실제로 사용한 외부 트렌드 키워드와 출처를 함께 저장합니다.
+    trendKeywords: trendKeywords.map((keyword) => {
+      const signal = trendSignals.find((item) => item.keyword === keyword);
+      return {
+        keyword,
+        source: signal?.source || "Google Trends"
+      };
+    })
   };
 }
+// 외부 트렌드 소스를 모아 상품 탐색용 키워드를 만듭니다.
+async function loadTrendSignals(env) {
+  // Google Trends는 현재 대한민국의 최근 24시간 인기 검색어를 제공하는 공개 소스입니다.
+  const googleKeywords = await loadGoogleTrendingKeywords();
 
-// 별도 인기검색 데이터에서 한국의 오늘 인기 검색어를 가져옵니다.
-async function loadTrendingKeywords() {
+  // 네이버 트렌드 API 자격증명이 있으면 Google 후보를 네이버 검색 추이로 교차검증합니다.
+  // 자격증명이 없거나 네이버 API가 unavailable이면 Google Trends만으로 안전하게 계속합니다.
+  const naverRatios = await loadNaverTrendRatios(googleKeywords, env);
+
+  return googleKeywords
+    .map((keyword) => ({
+      keyword,
+      source: naverRatios.has(keyword)
+        ? "Google Trends · Naver DataLab"
+        : "Google Trends"
+    }))
+    .sort((a, b) => {
+      const aRatio = naverRatios.get(a.keyword);
+      const bRatio = naverRatios.get(b.keyword);
+
+      if (aRatio == null && bRatio == null) return 0;
+      if (aRatio == null) return 1;
+      if (bRatio == null) return -1;
+      return bRatio - aRatio;
+    });
+}
+
+// Google Trends 대한민국 RSS에서 최근 인기 검색어를 가져옵니다.
+async function loadGoogleTrendingKeywords() {
   try {
-    // Google Trends의 한국 일간 인기 검색 RSS를 읽습니다.
     const response = await fetch(TREND_RSS_URL);
-    if (!response.ok) throw new Error(`Trend source error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Google Trends error: ${response.status}`);
+    }
 
     const xml = await response.text();
     const keywords = [];
-    const itemMatches = xml.matchAll(/<item>[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<\/item>/g);
+    const itemMatches = xml.matchAll(
+      /<item>[\s\S]*?<title>([\s\S]*?)<\\/title>[\s\S]*?<\\/item>/g
+    );
 
     for (const match of itemMatches) {
       const keyword = decodeXml(match[1]).trim();
-      if (keyword && !keywords.includes(keyword)) keywords.push(keyword);
+      if (keyword && !keywords.includes(keyword)) {
+        keywords.push(keyword);
+      }
     }
 
-    return keywords.slice(0, 10);
+    return keywords.slice(0, 20);
   } catch (error) {
-    // 인기검색 소스가 일시적으로 실패해도 Gold Box는 정상적으로 표시합니다.
-    console.error("보고팡 인기검색 데이터 실패:", error.message);
+    console.error("보고팡 Google Trends 데이터 실패:", error.message);
     return [];
   }
 }
 
+// 네이버 DataLab 검색어 트렌드가 설정된 경우 Google 후보를 교차검증합니다.
+async function loadNaverTrendRatios(keywords, env) {
+  const clientId = String(env.NAVER_CLIENT_ID || "").trim();
+  const clientSecret = String(env.NAVER_CLIENT_SECRET || "").trim();
+
+  if (!clientId || !clientSecret || !keywords.length) {
+    return new Map();
+  }
+
+  try {
+    const today = new Date();
+    const start = new Date(today);
+    start.setUTCDate(start.getUTCDate() - 6);
+
+    const body = {
+      startDate: start.toISOString().slice(0, 10),
+      endDate: today.toISOString().slice(0, 10),
+      timeUnit: "date",
+      keywordGroups: keywords.slice(0, 20).map((keyword) => ({
+        groupName: keyword,
+        keywords: [keyword]
+      }))
+    };
+
+    const response = await fetch("https://openapi.naver.com/v1/datalab/search", {
+      method: "POST",
+      headers: {
+        "X-Naver-Client-Id": clientId,
+        "X-Naver-Client-Secret": clientSecret,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Naver DataLab error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const ratios = new Map();
+
+    for (const result of data.results || []) {
+      const latest = Array.isArray(result.data) && result.data.length
+        ? result.data[result.data.length - 1]
+        : null;
+
+      if (latest && Number.isFinite(Number(latest.ratio))) {
+        ratios.set(result.title, Number(latest.ratio));
+      }
+    }
+
+    return ratios;
+  } catch (error) {
+    console.error("보고팡 Naver DataLab 데이터 실패:", error.message);
+    return new Map();
+  }
+}
 // XML에서 사용하는 기본 특수문자를 복원합니다.
 function decodeXml(value) {
   return value
@@ -306,7 +433,8 @@ async function getProductsResponse(env, ctx) {
         Array.isArray(cachedData.specialDeals) &&
         Array.isArray(cachedData.trendingSearch) &&
         Array.isArray(cachedData.popularProducts) &&
-        Array.isArray(cachedData.rocketProducts)
+        Array.isArray(cachedData.rocketProducts) &&
+        Array.isArray(cachedData.trendKeywords)
       ) {
         return cached;
       }
