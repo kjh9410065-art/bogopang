@@ -16,7 +16,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .logo{font-size:27px;font-weight:900;letter-spacing:-1.5px}.logo b{color:var(--accent)}
 .search{width:min(540px,52vw);position:relative}.search input{width:100%;padding:12px 38px 12px 16px;border:1px solid #dddfe5;border-radius:14px;background:#fafafa;outline:0}
 .search input:focus{border-color:#b9bbc2;background:#fff}
-.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}
+.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}
 .preview{margin:4px 0 16px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}
 .quick,.chips,.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none}.quick::-webkit-scrollbar,.chips::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
 .quick{padding:2px 0 18px}.pill,.chip,.tab,.sort{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}
@@ -43,7 +43,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <body>
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>지금 확인할 만한 상품을 한눈에 찾아보세요.</p></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="hero-points" aria-label="보고팡에서 할 수 있는 일"><span>🔥 오늘의 특가</span><span>✨ 오늘의 발견</span><span>🔎 오늘의 검색</span><span>🚀 로켓배송</span></div><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -63,12 +63,12 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 </section>
 
 <section id="discoverySection" class="section">
-<div class="section-head"><div><h2>✨ 오늘의 발견</h2><p>지금 확인해볼 만한 상품을 골라봤어요.</p></div></div>
+<div class="section-head"><div><h2>✨ 오늘의 발견</h2><p>가격·배송·오늘의 검색 키워드에서 지금 볼 만한 상품을 골라봤어요.</p></div></div>
 <div id="discovery" class="discovery"></div><div id="discoveryMore" class="more-wrap"></div>
 </section>
 
 <section id="trendSection" class="section">
-<div class="section-head"><div><h2>🔎 지금 많이 찾는 상품</h2><p>오늘 많이 검색된 키워드에서 찾은 상품</p></div></div>
+<div class="section-head"><div><h2>🔎 오늘 사람들이 많이 찾는 주제</h2><p>오늘 검색된 키워드에서 상품을 찾아봤어요.</p></div></div>
 <div id="keywords" class="keyword-row"></div>
 </section>
 
@@ -82,7 +82,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 </section>
 
 <section id="rocketSection" class="section">
-<div class="section-head"><div><h2>🚀 로켓배송</h2><p>로켓배송이 가능한 상품</p></div><span id="rocketCount" class="count"></span></div>
+<div class="section-head"><div><h2>🚀 로켓배송</h2><p>빠르게 받아볼 수 있는 상품을 모아봤어요.</p></div><span id="rocketCount" class="count"></span></div>
 <section id="rocketGrid" class="grid"></section><div id="rocketMore" class="more-wrap"></div>
 </section>
 
