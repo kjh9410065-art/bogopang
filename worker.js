@@ -1,5 +1,6 @@
 // 보고팡 Cloudflare Worker입니다.
 // Git 연동 자동 배포 연결 확인용 최신 버전입니다.
+// 외부 트렌드로 관심 키워드를 먼저 선정한 뒤 쿠팡 상품을 수집하고 캐시합니다.
 // 쿠팡 파트너스 API를 서버에서 호출해 API 키를 브라우저에 노출하지 않습니다.
 
 const COUPANG_DOMAIN = "https://api-gateway.coupang.com";
