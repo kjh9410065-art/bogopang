@@ -332,7 +332,7 @@ async function loadGoogleTrendingKeywords() {
     const xml = await response.text();
     const keywords = [];
     const itemMatches = xml.matchAll(
-      /<item>[\s\S]*?<title>([\s\S]*?)<\\/title>[\s\S]*?<\\/item>/g
+      /<item>[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<\/item>/g
     );
 
     for (const match of itemMatches) {
