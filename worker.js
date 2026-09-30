@@ -27,7 +27,7 @@ export default {
       }
     }
 
-    // 상품 API 요청은 쿠팡 Gold Box 데이터를 가져와 24시간 캐시합니다.
+    // 상품 API 요청은 목적별 상품 데이터를 가져와 1시간 캐시합니다.
     if (url.pathname === "/api/products") {
       return getProductsResponse(env, ctx);
     }
@@ -133,7 +133,7 @@ async function coupangRequest(method, path, env, body) {
   return data;
 }
 
-// 오늘의 Gold Box 상품을 가져오고 파트너스 링크를 생성합니다.
+// 오늘의 특가, 인기검색, 인기상품, 로켓배송을 목적별로 분리해 반환합니다.
 async function loadProducts(env) {
   // 쿠팡 공식 Gold Box 상품을 가져옵니다.
   const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
@@ -143,40 +143,50 @@ async function loadProducts(env) {
       ? goldbox.data.productData
       : [];
 
-  // 별도 인기검색 데이터에서 오늘의 인기 검색어를 가져옵니다.
+  // Google Trends에서 별도 인기검색 키워드를 가져옵니다.
   const trendKeywords = await loadTrendingKeywords();
 
-  // 인기 검색어 상위 5개만 사용해 쿠팡 상품 검색 API 호출량을 제한합니다.
-  const popularProducts = [];
+  // 인기검색어별로 쿠팡 공식 상품 검색 API를 호출합니다.
+  const trendingRaw = [];
   for (const keyword of trendKeywords.slice(0, 5)) {
     try {
-      // 검색어마다 쿠팡 검색 결과 상위 2개를 가져옵니다.
       const query = `?keyword=${encodeURIComponent(keyword)}&limit=2`;
       const result = await coupangRequest("GET", SEARCH_PATH + query, env);
       const products = Array.isArray(result.data?.productData) ? result.data.productData : [];
-      popularProducts.push(...products.map((item) => ({ ...item, trendKeyword: keyword })));
+      trendingRaw.push(...products.map((item) => ({ ...item, trendKeyword: keyword })));
     } catch (error) {
-      // 특정 인기검색어가 상품으로 연결되지 않아도 나머지는 계속 처리합니다.
       console.error("보고팡 인기검색 상품 조회 실패:", keyword, error.message);
     }
   }
 
-  // Gold Box와 인기검색 상품을 합치고 상품 ID 중복을 제거합니다.
-  const merged = [...goldboxProducts, ...popularProducts];
-  const unique = [];
-  const seen = new Set();
+  // 각 탭 내부에서만 상품 ID 기준으로 중복을 제거합니다.
+  const uniqueById = (products) => {
+    const unique = [];
+    const seen = new Set();
 
-  for (const item of merged) {
-    const key = String(item.productId || item.productUrl || item.productName);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(item);
-  }
+    for (const item of products) {
+      const key = String(item.productId || item.productUrl || item.productName);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(item);
+    }
 
-  // 모든 후보 상품을 파트너스 링크로 변환합니다.
+    return unique;
+  };
+
+  // 공식 데이터가 없는 '인기상품'은 임의로 만들지 않습니다.
+  const popularRaw = [];
+
+  // 로켓배송은 Coupang API의 공식 isRocket 필드만 사용합니다.
+  const rocketRaw = uniqueById([...goldboxProducts, ...trendingRaw])
+    .filter((item) => item.isRocket === true);
+
+  // 모든 탭의 상품을 합쳐 한 번에 딥링크로 변환합니다.
+  const allRaw = uniqueById([...goldboxProducts, ...trendingRaw, ...popularRaw, ...rocketRaw]);
   const converted = [];
-  for (let i = 0; i < unique.length; i += 50) {
-    const batch = unique.slice(i, i + 50);
+
+  for (let i = 0; i < allRaw.length; i += 50) {
+    const batch = allRaw.slice(i, i + 50);
     const urls = batch
       .map((item) => item.productId
         ? `https://www.coupang.com/vp/products/${item.productId}`
@@ -186,7 +196,6 @@ async function loadProducts(env) {
     if (!urls.length) continue;
 
     try {
-      // 딥링크 API는 50개 단위로 처리합니다.
       const deeplink = await coupangRequest(
         "POST",
         DEEPLINK_PATH,
@@ -199,23 +208,23 @@ async function loadProducts(env) {
         if (partnerUrl) converted.push([link.originalUrl, partnerUrl]);
       }
     } catch (error) {
-      // 한 배치가 실패해도 다른 상품 배치는 계속 처리합니다.
       console.error("보고팡 딥링크 배치 변환 실패:", error.message);
     }
   }
 
   const linkMap = new Map(converted);
-  const result = [];
 
-  for (const item of unique) {
+  // 개별 상품을 사이트에서 사용하는 공통 구조로 변환합니다.
+  const toSiteProduct = (item, source) => {
     const canonicalUrl = item.productId
       ? `https://www.coupang.com/vp/products/${item.productId}`
       : item.productUrl;
     const partnerUrl = linkMap.get(canonicalUrl) || linkMap.get(item.productUrl);
-    if (!partnerUrl) continue;
 
-    // 쿠팡 공식 상품 데이터만 사이트에 표시합니다.
-    result.push({
+    if (!partnerUrl) return null;
+
+    return {
+      id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
       price: item.productPrice,
       originalPrice: item.originalPrice ?? item.productOriginalPrice ?? item.listPrice ?? null,
@@ -224,12 +233,25 @@ async function loadProducts(env) {
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
       keyword: item.trendKeyword || null,
-      source: item.trendKeyword ? "인기검색" : "Gold Box",
+      source,
       url: partnerUrl
-    });
-  }
+    };
+  };
 
-  return result;
+  return {
+    specialDeals: uniqueById(goldboxProducts)
+      .map((item) => toSiteProduct(item, "오늘의 특가"))
+      .filter(Boolean),
+    trendingSearch: uniqueById(trendingRaw)
+      .map((item) => toSiteProduct(item, "인기검색"))
+      .filter(Boolean),
+    popularProducts: uniqueById(popularRaw)
+      .map((item) => toSiteProduct(item, "인기상품"))
+      .filter(Boolean),
+    rocketProducts: rocketRaw
+      .map((item) => toSiteProduct(item, "로켓배송"))
+      .filter(Boolean)
+  };
 }
 
 // 별도 인기검색 데이터에서 한국의 오늘 인기 검색어를 가져옵니다.
