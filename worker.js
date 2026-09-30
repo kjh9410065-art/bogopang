@@ -296,10 +296,25 @@ async function getProductsResponse(env, ctx) {
   // 먼저 기존 상품 데이터를 확인합니다.
   const cached = await cache.match(request);
   if (cached) {
-    return cached;
+    // 구조 변경 전의 배열 캐시가 남아 있으면 새 구조로 다시 생성합니다.
+    try {
+      const cachedData = await cached.clone().json();
+      if (
+        cachedData &&
+        !Array.isArray(cachedData) &&
+        Array.isArray(cachedData.specialDeals) &&
+        Array.isArray(cachedData.trendingSearch) &&
+        Array.isArray(cachedData.popularProducts) &&
+        Array.isArray(cachedData.rocketProducts)
+      ) {
+        return cached;
+      }
+    } catch {
+      // 잘못된 캐시는 무시하고 최신 데이터를 다시 생성합니다.
+    }
   }
 
-  // 캐시가 없으면 쿠팡에서 새 상품을 가져옵니다.
+  // 캐시가 없거나 이전 구조의 캐시라면 쿠팡에서 새 상품을 가져옵니다.
   try {
     const products = await loadProducts(env);
     const response = new Response(JSON.stringify(products), {
