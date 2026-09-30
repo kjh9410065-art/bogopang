@@ -98,15 +98,15 @@ const PREVIEW_MODE=true;
 // 미리보기 상품은 실제 판매량이나 인기순위를 의미하지 않습니다.
 const SAMPLE_DATA={
 specialDeals:[
-{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"Special",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
-{id:"sample-2",name:"특가 상품 예시",price:45900,originalPrice:59900,discountRate:23,image:"Deal",category:"가전",rocket:false,keyword:null,source:"미리보기",url:"#"}],
+{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
+{id:"sample-2",name:"특가 상품 예시",price:45900,originalPrice:59900,discountRate:23,image:"",category:"가전",rocket:false,keyword:null,source:"미리보기",url:"#"}],
 trendingSearch:[
-{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"Trend",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"},
-{id:"sample-4",name:"검색 키워드 상품 예시",price:32900,originalPrice:39900,discountRate:18,image:"Search",category:"디지털",rocket:false,keyword:"검색어 예시",source:"미리보기",url:"#"}],
+{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"},
+{id:"sample-4",name:"검색 키워드 상품 예시",price:32900,originalPrice:39900,discountRate:18,image:"",category:"디지털",rocket:false,keyword:"검색어 예시",source:"미리보기",url:"#"}],
 popularProducts:[],
 rocketProducts:[
-{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"Rocket",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
-{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"Rocket",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
+{id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
+{id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
 let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체",sortMode="recommended",searchKeyword="";
 
@@ -201,9 +201,6 @@ setSectionVisible("discoverySection",items.length>0&&!searchKeyword);
 if(!searchKeyword) drawGrid("discovery",items,"현재 발견할 상품이 없습니다.");
 }
 
-// Google Trends 키워드를 상품 키워드에서 추려 표시합니다.
-function drawKeywords(){const keywords=[...new Set(productData.trendingSearch.map(i=>i.keyword).filter(Boolean))].slice(0,10);const section=document.getElementById("trendSection");setSectionVisible("trendSection",keywords.length>0);document.getElementById("keywords").innerHTML=keywords.map(k=>'<button class="keyword-chip" data-keyword="'+escapeHtml(k)+'">'+escapeHtml(k)+"</button>").join("");document.querySelectorAll("[data-keyword]").forEach(b=>b.onclick=()=>{searchKeyword=b.dataset.keyword;document.getElementById("q").value=searchKeyword;activeTab="trendingSearch";selectedCategory="전체";draw();document.getElementById("browseSection").scrollIntoView({behavior:"smooth"})})}
-
 // 오늘의 특가는 검색 모드가 아닐 때 첫 번째 상품 영역으로 보여줍니다.
 function drawDeals(){
 const items=filterItems(productData.specialDeals);
@@ -232,6 +229,9 @@ function drawSearch(){
 const section=document.getElementById("searchSection");
 if(!searchKeyword){section.classList.add("hidden");document.querySelector(".hero").classList.remove("hidden");document.getElementById("quickPrices").classList.remove("hidden");document.getElementById("tabs").classList.remove("hidden");return}
 section.classList.remove("hidden");
+document.querySelector(".hero").classList.add("hidden");
+document.getElementById("quickPrices").classList.add("hidden");
+document.getElementById("tabs").classList.add("hidden");
 const all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.popularProducts,...productData.rocketProducts]);
 const results=sortItems(filterItems(all,searchKeyword));
 document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";
