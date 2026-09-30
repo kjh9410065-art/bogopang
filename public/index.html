@@ -70,7 +70,7 @@ function draw() {
         '<div class="body">' +
         '<div class="badge">' +
         (item.rocket ? "로켓배송 · " : "") +
-        "오늘의 특가" +
+        (item.source === "인기검색" ? "인기검색" : "오늘의 특가") +
         "</div>" +
         '<div class="title">' +
         item.name +
