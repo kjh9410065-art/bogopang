@@ -36,8 +36,8 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}
 .empty{grid-column:1/-1;text-align:center;color:#777;padding:45px 0;background:#fff;border:1px solid var(--line);border-radius:18px}
 .hidden{display:none!important}footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
-@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.discovery{grid-template-columns:1fr}}
-@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.section-head h2{font-size:20px}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
 </style>
 </head>
 <body>
@@ -230,7 +230,7 @@ document.getElementById("searchSection").scrollIntoView({behavior:"smooth"})
 // 검색 결과 전용 화면을 그립니다.
 function drawSearch(){
 const section=document.getElementById("searchSection");
-if(!searchKeyword){section.classList.add("hidden");return}
+if(!searchKeyword){section.classList.add("hidden");document.querySelector(".hero").classList.remove("hidden");document.getElementById("quickPrices").classList.remove("hidden");document.getElementById("tabs").classList.remove("hidden");return}
 section.classList.remove("hidden");
 const all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.popularProducts,...productData.rocketProducts]);
 const results=sortItems(filterItems(all,searchKeyword));
