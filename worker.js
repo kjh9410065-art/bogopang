@@ -19,7 +19,17 @@ export default {
     const url = new URL(request.url);
 
     // 수동 갱신 요청은 쿠팡에서 최신 상품을 다시 받아 캐시를 교체합니다.
-    if (url.pathname === "/api/refresh" && request.method === "GET") {
+    if (url.pathname === "/api/refresh" && request.method === "POST") {
+      const refreshKey = String(env.REFRESH_KEY || "").trim();
+      const providedKey = request.headers.get("X-Refresh-Key") || "";
+
+      if (!refreshKey || providedKey !== refreshKey) {
+        return new Response(JSON.stringify({ ok: false, error: "갱신 권한이 없습니다." }), {
+          status: 403,
+          headers: { "Content-Type": "application/json; charset=UTF-8" }
+        });
+      }
+
       try {
         await refreshProducts(env);
         return new Response(JSON.stringify({ ok: true, message: "상품 갱신 완료" }), {
@@ -172,7 +182,7 @@ async function loadProducts(env) {
   const searchSignals = trendSignals.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
 
   for (const signal of searchSignals) {
-    if (usedSignals.length >= TREND_KEYWORD_LIMIT && countUniqueProducts() >= MIN_TRENDING_PRODUCTS) {
+    if (usedSignals.length >= TREND_KEYWORD_LIMIT || countUniqueProducts() >= MIN_TRENDING_PRODUCTS) {
       break;
     }
 
@@ -357,10 +367,8 @@ async function loadTrendSignals(env) {
   // 상품과 직접 연결하기 어려운 뉴스/인물/정치/경기성 검색어를 우선 제외합니다.
   const productKeywords = selectProductTrendKeywords(googleKeywords);
 
-  // 후보가 너무 적으면 Google 원본 후보를 fallback으로 사용해 수집이 멈추지 않게 합니다.
-  const selectedKeywords = productKeywords.length >= 3
-    ? productKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT)
-    : googleKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
+  // 상품성 후보가 부족하면 그 수만 사용하고, 관련 없는 원본 트렌드를 상품 검색에 억지로 연결하지 않습니다.
+  const selectedKeywords = productKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
 
   // 네이버 DataLab 자격증명이 있으면 선정 후보를 추가 교차검증합니다.
   const naverRatios = await loadNaverTrendRatios(selectedKeywords, env);
