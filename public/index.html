@@ -169,7 +169,17 @@ function drawSorts(){const sorts=[["recommended","기본순"],["low","낮은 가
 function sortItems(items){return [...items].sort((a,b)=>{if(sortMode==="low")return(parsePrice(a.price)??Infinity)-(parsePrice(b.price)??Infinity);if(sortMode==="high")return(parsePrice(b.price)??-Infinity)-(parsePrice(a.price)??-Infinity);if(sortMode==="discount")return(Number(b.discountRate)||-Infinity)-(Number(a.discountRate)||-Infinity);return 0})}
 
 // 상품 카드 HTML을 생성합니다.
-function getReasonLabels(item,discovery=false){if(!discovery)return [];const labels=[];const price=parsePrice(item.price);if(item.keyword)labels.push("오늘의 관심 키워드: "+item.keyword);if(price!=null&&price<=30000)labels.push("3만원 이하");if(item.rocket)labels.push("로켓배송");return labels.slice(0,2)}
+function getReasonLabels(item,discovery=false){
+if(!discovery)return [];
+const labels=[];
+const price=parsePrice(item.price);
+const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(Boolean):[];
+const keyword=trendKeywords[0]||item.keyword;
+if(keyword)labels.push("오늘의 관심 키워드: "+keyword);
+if(price!=null&&price<=30000)labels.push("3만원 이하");
+if(item.rocket)labels.push("로켓배송");
+return labels.slice(0,2)
+}
 
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
 function cardHtml(item,options={}){const price=parsePrice(item.price),original=parsePrice(item.originalPrice),rate=Number(item.discountRate);const discount=Number.isFinite(rate)?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";const old=original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");const reasons=getReasonLabels(item,Boolean(options.discovery));const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"<div class=\"reason-row\"></div>";return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div><div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'}
@@ -183,7 +193,34 @@ function drawGrid(containerId,items,emptyText="현재 조건에 맞는 상품이
 function drawMoreButton(containerId,allItems,visibleCount,expanded,label){const el=document.getElementById(containerId);if(!el)return;const extra=allItems.length>visibleCount;el.innerHTML=extra?'<button class="more-btn" data-more="'+containerId+'">'+(expanded?"접기":"더 많은 상품 보기")+"</button>":"";const btn=el.querySelector("[data-more]");if(btn)btn.onclick=()=>{if(containerId==="dealMore")expandedSections.deals=!expandedSections.deals;else if(containerId==="rocketMore")expandedSections.rocket=!expandedSections.rocket;draw()}}
 
 // 오늘의 발견은 실제 API 상품 중 조건에 맞는 상품을 카드로 보여줍니다.
-function getDiscoveryItems(){const all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.rocketProducts]);const specialIds=new Set(uniqueProducts(productData.specialDeals).map(i=>String(i.id||i.url||i.name)));const candidates=all.filter(i=>!specialIds.has(String(i.id||i.url||i.name)));const selected=[];for(const item of [...candidates.filter(i=>i.keyword),...candidates.filter(i=>parsePrice(i.price)!=null&&parsePrice(i.price)<=30000),...candidates.filter(i=>i.rocket)]){const key=String(item.id||item.url||item.name);if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);if(selected.length>=6)break}if(selected.length<4){for(const item of candidates){const key=String(item.id||item.url||item.name);if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);if(selected.length>=6)break}}return selected.slice(0,6)}
+function getDiscoveryItems(){
+const all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.rocketProducts]);
+const specialIds=new Set(uniqueProducts(productData.specialDeals).map(i=>String(i.id||i.url||i.name)));
+const candidates=all.filter(i=>!specialIds.has(String(i.id||i.url||i.name)));
+
+// 실제 데이터에 있는 트렌드 연결 상품을 먼저 보여주고, 가격/로켓 조건은 그 다음 보조 근거로 사용합니다.
+const hasTrend=item=>Boolean((Array.isArray(item.trendKeywords)&&item.trendKeywords.length)||item.keyword);
+const selected=[];
+for(const item of [
+...candidates.filter(hasTrend),
+...candidates.filter(i=>parsePrice(i.price)!=null&&parsePrice(i.price)<=30000),
+...candidates.filter(i=>i.rocket)
+]){
+const key=String(item.id||item.url||item.name);
+if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);
+if(selected.length>=6)break;
+}
+
+// 상품이 충분하지 않은 경우에만 남은 실제 상품으로 빈칸을 채웁니다.
+if(selected.length<4){
+for(const item of candidates){
+const key=String(item.id||item.url||item.name);
+if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);
+if(selected.length>=6)break;
+}
+}
+return selected.slice(0,6)
+}
 
 function drawDiscovery(){const items=getDiscoveryItems();setSectionVisible("discoverySection",items.length>0&&!searchKeyword);if(!searchKeyword)drawGrid("discovery",items,"현재 발견할 상품이 없습니다.",{discovery:true})}
 
