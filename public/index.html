@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#171717;font-family:Arial,"Noto Sans KR",sans-serif}a{text-decoration:none;color:inherit}
 .wrap{width:min(1180px,calc(100% - 32px));margin:auto}header{background:#fff;border-bottom:1px solid #e8e8ec}.head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{font-size:28px;font-weight:900}.logo b{color:#ff5a2f}.search{width:min(500px,50vw)}input{width:100%;padding:13px 16px;border:1px solid #dddfe5;border-radius:14px}
-.hero{padding:42px 0 24px}.hero h1{margin:0;font-size:clamp(28px,5vw,44px);letter-spacing:-2px}.hero p{color:#777}.cats{display:flex;gap:8px;overflow:auto;padding:8px 0 24px}.cat{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 15px;white-space:nowrap}.cat.on{background:#171717;color:#fff}
+.hero{padding:42px 0 24px}.hero h1{margin:0;font-size:clamp(28px,5vw,44px);letter-spacing:-2px}.hero p{color:#777}.tabs{display:flex;gap:8px;overflow:auto;padding:8px 0 14px}.tab{border:1px solid #ddd;background:#fff;border-radius:12px;padding:11px 18px;white-space:nowrap;font-weight:800;cursor:pointer}.tab.on{background:#171717;color:#fff}.cats{display:flex;gap:8px;overflow:auto;padding:8px 0 24px}.cat{border:1px solid #ddd;background:#fff;border-radius:999px;padding:9px 15px;white-space:nowrap}.cat.on{background:#171717;color:#fff}
 .top{display:flex;justify-content:space-between;align-items:end}.top h2{font-size:22px}.top span{color:#888;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid #e8e9ed;border-radius:18px;overflow:hidden}.img{aspect-ratio:1;background:linear-gradient(135deg,#eee,#fafafa);display:grid;place-items:center;color:#aaa}.body{padding:14px}.badge{color:#ff4d24;font-size:12px;font-weight:900}.title{min-height:42px;font-size:14px;line-height:1.5;font-weight:700;margin-top:8px}.price{font-size:20px;font-weight:900;margin-top:10px}.discount{color:#ff4d24;margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px}.buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}footer{padding:30px 0 45px;color:#777;font-size:12px;line-height:1.7}
 @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.wrap{width:calc(100% - 20px)}.search{display:none}.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
 </style>
@@ -17,94 +17,158 @@
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" placeholder="상품을 검색해보세요"></div></div></header>
 <main class="wrap">
 <section class="hero"><h1>오늘의 할인은?</h1><p>매일 새롭게 확인하는 쿠팡 할인상품과 특가상품</p></section>
-<nav id="cats" class="cats"></nav>
-<div class="top"><h2 id="heading">오늘의 할인상품</h2><span>매일 오전 자동 갱신</span></div>
+<nav id="tabs" class="tabs"></nav><nav id="cats" class="cats"></nav>
+<div class="top"><div><h2 id="heading">오늘의 특가</h2><span id="description">쿠팡에서 오늘 확인할 수 있는 특가상품</span></div><span>자동 갱신 준비됨</span></div>
 <section id="grid" class="grid"></section>
 <footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</footer>
 </main>
 <script>
-// 쿠팡 파트너스 API에서 가져온 실제 상품을 표시합니다.
-let items = [];
-let selected = "전체";
+// 목적별 상품 데이터를 분리해 탭으로 표시합니다.
+let productData = {
+  specialDeals: [],
+  trendingSearch: [],
+  popularProducts: [],
+  rocketProducts: []
+};
+let activeTab = "specialDeals";
+let selectedCategory = "전체";
 
-// 카테고리와 상품을 화면에 그립니다.
-function draw() {
-  const cats = ["전체", ...new Set(items.map((item) => item.category))];
+// 현재 선택된 탭의 상품 목록을 반환합니다.
+function getActiveItems() {
+  return productData[activeTab] || [];
+}
 
-  document.getElementById("cats").innerHTML = cats
+// 상품 탭을 그립니다.
+function drawTabs() {
+  const tabs = [
+    ["specialDeals", "오늘의 특가"],
+    ["trendingSearch", "인기검색"],
+    ["popularProducts", "인기상품"],
+    ["rocketProducts", "로켓배송"]
+  ];
+
+  document.getElementById("tabs").innerHTML = tabs
+    .map(([key, label]) =>
+      '<button class="tab ' + (activeTab === key ? "on" : "") +
+      '" data-tab="' + key + '">' + label + "</button>"
+    )
+    .join("");
+
+  document.querySelectorAll("[data-tab]").forEach((button) => {
+    button.onclick = () => {
+      activeTab = button.dataset.tab;
+      selectedCategory = "전체";
+      draw();
+    };
+  });
+}
+
+// 현재 탭의 카테고리 필터를 그립니다.
+function drawCategories(items) {
+  const categories = ["전체", ...new Set(items.map((item) => item.category).filter(Boolean))];
+
+  document.getElementById("cats").innerHTML = categories
     .map((category) =>
-      '<button class="cat ' +
-      (category === selected ? "on" : "") +
-      '" data-c="' + category + '">' +
-      category +
-      "</button>"
+      '<button class="cat ' + (category === selectedCategory ? "on" : "") +
+      '" data-c="' + category + '">' + category + "</button>"
     )
     .join("");
 
   document.querySelectorAll("[data-c]").forEach((button) => {
     button.onclick = () => {
-      selected = button.dataset.c;
+      selectedCategory = button.dataset.c;
       draw();
     };
   });
+}
 
-  const query = document.getElementById("q").value.toLowerCase();
+// 현재 탭에 맞는 제목과 설명을 표시합니다.
+function drawHeader() {
+  const headers = {
+    specialDeals: ["오늘의 특가", "쿠팡에서 오늘 확인할 수 있는 특가상품"],
+    trendingSearch: ["인기검색", "오늘 많이 검색된 키워드에서 찾은 상품"],
+    popularProducts: ["인기상품", "공식 데이터로 확인 가능한 인기상품"],
+    rocketProducts: ["로켓배송", "로켓배송이 가능한 상품"]
+  };
+
+  const [title, description] = headers[activeTab];
+  document.getElementById("heading").textContent = title;
+  document.getElementById("description").textContent = description;
+}
+
+// 상품 카드 목록을 그립니다.
+function draw() {
+  const items = getActiveItems();
+  drawTabs();
+  drawCategories(items);
+  drawHeader();
+
+  const query = document.getElementById("q").value.toLowerCase().trim();
   const list = items.filter(
     (item) =>
-      (selected === "전체" || item.category === selected) &&
+      (selectedCategory === "전체" || item.category === selectedCategory) &&
       item.name.toLowerCase().includes(query)
   );
 
-  document.getElementById("heading").textContent =
-    selected === "전체" ? "오늘의 할인상품" : selected;
+  const grid = document.getElementById("grid");
 
-  document.getElementById("grid").innerHTML = list
-    .map(
-      (item) =>
-        '<article class="card">' +
-        '<div class="img"><img src="' +
-        item.image +
-        '" alt="' +
-        item.name.replace(/"/g, "&quot;") +
-        '" loading="lazy" style="width:100%;height:100%;object-fit:contain"></div>' +
-        '<div class="body">' +
-        '<div class="badge">' +
-        (item.rocket ? "로켓배송 · " : "") +
-        (item.source === "인기검색" ? "인기검색" : "오늘의 특가") +
-        "</div>" +
-        '<div class="title">' +
-        item.name +
-        "</div>" +
-        (item.discountRate != null
-          ? '<div class="price"><span class="discount">' + Number(item.discountRate) + '%</span>' +
-            Number(item.price).toLocaleString("ko-KR") + "원" +
-            (item.originalPrice && Number(item.originalPrice) > Number(item.price)
-              ? ' <span class="old">' + Number(item.originalPrice).toLocaleString("ko-KR") + "원</span>"
-              : "") +
-            "</div>"
-          : '<div class="price">' + Number(item.price).toLocaleString("ko-KR") + "원</div>") +
-        '<a class="buy" href="' +
-        item.url +
-        '" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a>' +
-        "</div></article>"
-    )
-    .join("");
+  if (!list.length) {
+    grid.innerHTML =
+      '<p style="grid-column:1/-1;text-align:center;color:#777;padding:40px 0">' +
+      (activeTab === "popularProducts"
+        ? "현재 공식 데이터로 제공되는 인기상품이 없습니다."
+        : "해당 조건의 상품이 없습니다.") +
+      "</p>";
+    return;
+  }
+
+  grid.innerHTML = list.map((item) => {
+    const discount = item.discountRate != null
+      ? '<span class="discount">' + Number(item.discountRate) + '%</span>'
+      : "";
+    const original = item.originalPrice && Number(item.originalPrice) > Number(item.price)
+      ? ' <span class="old">' + Number(item.originalPrice).toLocaleString("ko-KR") + "원</span>"
+      : "";
+
+    return '<article class="card">' +
+      '<div class="img"><img src="' + item.image +
+      '" alt="' + item.name.replace(/"/g, "&quot;") +
+      '" loading="lazy" style="width:100%;height:100%;object-fit:contain"></div>' +
+      '<div class="body">' +
+      '<div class="badge">' +
+      (item.rocket ? "로켓배송 · " : "") +
+      item.source +
+      "</div>" +
+      '<div class="title">' + item.name + "</div>" +
+      '<div class="price">' + discount +
+      Number(item.price).toLocaleString("ko-KR") + "원" + original + "</div>" +
+      '<a class="buy" href="' + item.url +
+      '" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a>' +
+      "</div></article>";
+  }).join("");
 }
 
-// 쿠팡 상품 API를 한 번 호출해 현재 상품을 가져옵니다.
+// 쿠팡 상품 API에서 목적별 상품 데이터를 가져옵니다.
 async function loadProducts() {
   const grid = document.getElementById("grid");
-  grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#777">오늘의 할인상품을 불러오는 중...</p>';
+  grid.innerHTML =
+    '<p style="grid-column:1/-1;text-align:center;color:#777">상품을 불러오는 중...</p>';
 
   try {
     const response = await fetch("/api/products");
     const data = await response.json();
 
-    if (!response.ok || !Array.isArray(data)) {
-      throw new Error(data.error || "상품 정보를 불러오지 못했습니다.");
+    if (!response.ok || !data || Array.isArray(data)) {
+      throw new Error(data?.error || "상품 정보를 불러오지 못했습니다.");
     }
 
-    items = data;
+    productData = {
+      specialDeals: Array.isArray(data.specialDeals) ? data.specialDeals : [],
+      trendingSearch: Array.isArray(data.trendingSearch) ? data.trendingSearch : [],
+      popularProducts: Array.isArray(data.popularProducts) ? data.popularProducts : [],
+      rocketProducts: Array.isArray(data.rocketProducts) ? data.rocketProducts : []
+    };
+
     draw();
   } catch (error) {
     grid.innerHTML =
@@ -115,7 +179,7 @@ async function loadProducts() {
   }
 }
 
-// 검색어가 바뀌면 화면을 즉시 필터링합니다.
+// 검색어가 바뀌면 현재 탭을 즉시 필터링합니다.
 document.getElementById("q").oninput = draw;
 loadProducts();
 </script>
