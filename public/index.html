@@ -169,8 +169,16 @@ const discount=Number.isFinite(rate)?'<span class="discount">'+escapeHtml(rate)+
 const original=originalPrice!=null&&price!=null&&originalPrice>price?'<span class="old">'+originalPrice.toLocaleString("ko-KR")+"원</span>":"";
 const keyword=item.keyword?'<span class="keyword">#'+escapeHtml(item.keyword)+"</span>":"";
 const source=escapeHtml(item.source||"쿠팡 데이터"),name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
-return '<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy" onerror="this.removeAttribute('src');this.alt='이미지를 불러오지 못했습니다.'"></div><div class="body"><div class="badge">'+(item.rocket?"로켓배송 · ":"")+source+keyword+'</div><div class="title">'+name+'</div><div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+original+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
+return '<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body"><div class="badge">'+(item.rocket?"로켓배송 · ":"")+source+keyword+'</div><div class="title">'+name+'</div><div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+original+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
 }).join("")
+
+// 상품 이미지가 실패하면 깨진 이미지를 숨기고 안내 문구를 표시합니다.
+grid.querySelectorAll(".img img").forEach((img) => {
+  img.onerror = () => {
+    img.removeAttribute("src");
+    img.alt = "이미지를 불러오지 못했습니다.";
+  };
+});
 }
 
 // 현재 상태에 맞게 전체 화면을 다시 그립니다.
