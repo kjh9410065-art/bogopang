@@ -367,7 +367,7 @@ async function loadNaverTrendRatios(keywords, env) {
       startDate: start.toISOString().slice(0, 10),
       endDate: today.toISOString().slice(0, 10),
       timeUnit: "date",
-      keywordGroups: keywords.slice(0, 20).map((keyword) => ({
+      keywordGroups: keywords.slice(0, 5).map((keyword) => ({
         groupName: keyword,
         keywords: [keyword]
       }))
