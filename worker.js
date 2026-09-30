@@ -9,6 +9,8 @@ const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink
 const SEARCH_PATH = "/v2/providers/affiliate_open_api/apis/openapi/products/search";
 const TREND_RSS_URL = "https://trends.google.com/trending/rss?geo=KR";
 const TREND_KEYWORD_LIMIT = 8;
+const TREND_KEYWORD_CANDIDATE_LIMIT = 12;
+const MIN_TRENDING_PRODUCTS = 8;
 const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
@@ -41,7 +43,7 @@ export default {
   },
 
   async scheduled(controller, env, ctx) {
-    // 매일 한국시간 오전 7시에 상품 데이터를 미리 갱신합니다.
+    // Cron이 활성화된 환경에서만 예약 갱신을 실행합니다.
     ctx.waitUntil(refreshProducts(env));
   }
 };
@@ -147,14 +149,33 @@ async function loadProducts(env) {
       ? goldbox.data.productData
       : [];
 
-  // 외부 트렌드에서 먼저 상품 탐색용 키워드를 선정합니다.
+  // 외부 트렌드에서 상품과 연결하기 좋은 후보를 먼저 선정합니다.
   const trendSignals = await loadTrendSignals(env);
-  const trendKeywords = trendSignals.map((item) => item.keyword).slice(0, TREND_KEYWORD_LIMIT);
 
-  // 선정된 키워드에 대해서만 쿠팡 Search API를 호출합니다.
-  // 사용자가 사이트에서 검색할 때는 이 API를 다시 호출하지 않습니다.
+  // 트렌드 상품은 최대 8개 키워드를 먼저 검색하고,
+  // 결과가 부족할 때만 남은 적합 키워드를 추가로 사용합니다.
   const trendingRaw = [];
-  for (const signal of trendSignals.slice(0, TREND_KEYWORD_LIMIT)) {
+  const usedSignals = [];
+
+  const productIdentity = (item) =>
+    String(item.productId || item.productUrl || item.productName || "");
+
+  const countUniqueProducts = () => {
+    const seen = new Set();
+    for (const item of trendingRaw) {
+      const key = productIdentity(item);
+      if (key) seen.add(key);
+    }
+    return seen.size;
+  };
+
+  const searchSignals = trendSignals.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
+
+  for (const signal of searchSignals) {
+    if (usedSignals.length >= TREND_KEYWORD_LIMIT && countUniqueProducts() >= MIN_TRENDING_PRODUCTS) {
+      break;
+    }
+
     try {
       const query =
         `?keyword=${encodeURIComponent(signal.keyword)}&limit=${COUPANG_SEARCH_PRODUCT_LIMIT}`;
@@ -163,10 +184,13 @@ async function loadProducts(env) {
         ? result.data.productData
         : [];
 
+      usedSignals.push(signal);
+
       trendingRaw.push(
         ...products.map((item) => ({
           ...item,
           trendKeyword: signal.keyword,
+          trendKeywords: [signal.keyword],
           trendSource: signal.source
         }))
       );
@@ -175,16 +199,42 @@ async function loadProducts(env) {
     }
   }
 
-  // 상품 ID 기준으로 전체 결과를 한 번에 중복 제거합니다.
+  // 상품 ID 기준으로 중복 제거하면서 여러 트렌드 키워드의 연결 정보는 합칩니다.
   const uniqueById = (products) => {
     const unique = [];
-    const seen = new Set();
+    const indexMap = new Map();
 
     for (const item of products) {
-      const key = String(item.productId || item.productUrl || item.productName);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      unique.push(item);
+      const key = productIdentity(item);
+      if (!key) continue;
+
+      const existingIndex = indexMap.get(key);
+      if (existingIndex == null) {
+        const keywords = Array.isArray(item.trendKeywords)
+          ? [...new Set(item.trendKeywords.filter(Boolean))]
+          : item.trendKeyword
+            ? [item.trendKeyword]
+            : [];
+
+        unique.push({
+          ...item,
+          trendKeywords: keywords
+        });
+        indexMap.set(key, unique.length - 1);
+        continue;
+      }
+
+      const existing = unique[existingIndex];
+      const mergedKeywords = [
+        ...(Array.isArray(existing.trendKeywords) ? existing.trendKeywords : []),
+        ...(Array.isArray(item.trendKeywords) ? item.trendKeywords : []),
+        item.trendKeyword || ""
+      ].filter(Boolean);
+
+      existing.trendKeywords = [...new Set(mergedKeywords)];
+      if (!existing.trendKeyword && item.trendKeyword) {
+        existing.trendKeyword = item.trendKeyword;
+      }
     }
 
     return unique;
@@ -247,6 +297,12 @@ async function loadProducts(env) {
 
     if (!partnerUrl) return null;
 
+    const trendKeywords = Array.isArray(item.trendKeywords)
+      ? [...new Set(item.trendKeywords.filter(Boolean))]
+      : item.trendKeyword
+        ? [item.trendKeyword]
+        : [];
+
     return {
       id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
@@ -263,7 +319,8 @@ async function loadProducts(env) {
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
-      keyword: item.trendKeyword || null,
+      keyword: trendKeywords[0] || null,
+      trendKeywords,
       trendSource: item.trendSource || null,
       source,
       url: partnerUrl
@@ -285,26 +342,30 @@ async function loadProducts(env) {
       .map((item) => toSiteProduct(item, "로켓배송"))
       .filter(Boolean),
 
-    // 갱신 시 실제로 사용한 외부 트렌드 키워드와 출처를 함께 저장합니다.
-    trendKeywords: trendKeywords.map((keyword) => {
-      const signal = trendSignals.find((item) => item.keyword === keyword);
-      return {
-        keyword,
-        source: signal?.source || "Google Trends"
-      };
-    })
+    // 실제로 검색에 사용한 외부 트렌드 키워드와 출처만 저장합니다.
+    trendKeywords: usedSignals.map((signal) => ({
+      keyword: signal.keyword,
+      source: signal.source
+    }))
   };
 }
 // 외부 트렌드 소스를 모아 상품 탐색용 키워드를 만듭니다.
 async function loadTrendSignals(env) {
-  // Google Trends는 현재 대한민국의 최근 24시간 인기 검색어를 제공하는 공개 소스입니다.
+  // Google Trends 대한민국 최근 24시간 후보를 가져옵니다.
   const googleKeywords = await loadGoogleTrendingKeywords();
 
-  // 네이버 트렌드 API 자격증명이 있으면 Google 후보를 네이버 검색 추이로 교차검증합니다.
-  // 자격증명이 없거나 네이버 API가 unavailable이면 Google Trends만으로 안전하게 계속합니다.
-  const naverRatios = await loadNaverTrendRatios(googleKeywords, env);
+  // 상품과 직접 연결하기 어려운 뉴스/인물/정치/경기성 검색어를 우선 제외합니다.
+  const productKeywords = selectProductTrendKeywords(googleKeywords);
 
-  return googleKeywords
+  // 후보가 너무 적으면 Google 원본 후보를 fallback으로 사용해 수집이 멈추지 않게 합니다.
+  const selectedKeywords = productKeywords.length >= 3
+    ? productKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT)
+    : googleKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
+
+  // 네이버 DataLab 자격증명이 있으면 선정 후보를 추가 교차검증합니다.
+  const naverRatios = await loadNaverTrendRatios(selectedKeywords, env);
+
+  return selectedKeywords
     .map((keyword) => ({
       keyword,
       source: naverRatios.has(keyword)
@@ -320,6 +381,44 @@ async function loadTrendSignals(env) {
       if (bRatio == null) return -1;
       return bRatio - aRatio;
     });
+}
+
+// 상품 구매 검색으로 연결하기 좋은 트렌드인지 규칙으로 판별합니다.
+function selectProductTrendKeywords(keywords) {
+  const excludedPatterns = [
+    /정치|대통령|국회|선거|후보|정당|총선|대선|의원|장관|공약|입법/,
+    /사건|사고|사망|체포|구속|재판|판결|폭행|범죄|사기|피싱|논란|속보|뉴스/,
+    /축구|야구|농구|배구|테니스|골프.*경기|경기결과|플레이오프|월드컵|올림픽|금메달|선수|감독/,
+    /배우|가수|아이돌|연예|방송|드라마|영화|예능|열애|결혼|이혼|미스코리아|아나운서|가요/,
+    /주가|증시|공매도|우선주|코인|비트코인|환율|금리|주식/,
+    /날씨|태풍|지진|폭염|폭설|미세먼지/
+  ];
+
+  const productPatterns = [
+    /식품|음식|과일|채소|고기|육류|수산|간식|라면|과자|커피|차|음료|우유|치즈|빵|떡|김치/,
+    /세제|휴지|생필품|주방|청소|수납|정리|가구|침대|의자|책상|조명|인테리어/,
+    /가전|에어컨|선풍기|냉장고|세탁기|건조기|청소기|전자레인지|노트북|컴퓨터|모니터|키보드|마우스|스마트폰|아이폰|갤럭시|이어폰|충전기/,
+    /옷|의류|패션|드레스|원피스|셔츠|티셔츠|바지|자켓|코트|신발|운동화|구두|가방|지갑|시계|안경|악세사리/,
+    /화장품|뷰티|샴푸|린스|트리트먼트|스킨|로션|크림|선크림|향수|면도|헤어|단발/,
+    /캠핑|텐트|여행|캐리어|등산|낚시|골프|자전거|운동|헬스|요가|러닝|취미|문구|게임|장난감/,
+    /육아|유아|아기|기저귀|분유|유모차|반려|강아지|고양이|사료|펫/,
+    /건강|혈당|콜레스테롤|영양|비타민|프로틴|마사지|안마|건강관리/
+  ];
+
+  return [...new Set(
+    keywords.filter((keyword) => {
+      const normalized = String(keyword || "").trim();
+      if (!normalized || normalized.length > 80) return false;
+      if (excludedPatterns.some((pattern) => pattern.test(normalized))) return false;
+
+      // 명확한 상품 카테고리 키워드는 우선적으로 통과시킵니다.
+      if (productPatterns.some((pattern) => pattern.test(normalized))) return true;
+
+      // 일반 브랜드/제품명은 너무 긴 뉴스형 문장을 제외하고 통과시켜 검색 기회를 보존합니다.
+      const wordCount = normalized.split(/\\s+/).filter(Boolean).length;
+      return wordCount <= 4 && !/[?!]|대\s*[대vs]|검색량|급상승|순위/.test(normalized);
+    })
+  )];
 }
 
 // Google Trends 대한민국 RSS에서 최근 인기 검색어를 가져옵니다.
@@ -470,7 +569,7 @@ async function getProductsResponse(env, ctx) {
   }
 }
 
-// 매일 오전 7시 스케줄에서 상품 캐시를 새 데이터로 교체합니다.
+// 예약 갱신이 활성화된 경우 상품 캐시를 새 데이터로 교체합니다.
 async function refreshProducts(env) {
   const cache = caches.default;
   const request = new Request(CACHE_URL, { method: "GET" });
