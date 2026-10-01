@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>보고팡 | 오늘 뭐 살까?</title>
 <meta name="description" content="오늘 확인할 만한 쿠팡 특가상품과 검색 키워드 상품을 빠르게 찾아보세요.">
+<link rel="canonical" href="https://bogopang.tcflick.com/">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="보고팡 | 오늘 뭐 살까?">
+<meta property="og:description" content="오늘 확인할 만한 쿠팡 특가상품과 검색 키워드 상품을 빠르게 찾아보세요.">
+<meta property="og:url" content="https://bogopang.tcflick.com/">
+<meta property="og:site_name" content="보고팡">
 <style>
 *{box-sizing:border-box}
 :root{--bg:#f6f7f9;--text:#171717;--muted:#73757d;--line:#e7e8ec;--accent:#ff5a2f}
@@ -30,14 +37,14 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .keyword-row{display:flex;flex-wrap:wrap;gap:8px}.trend-source{margin:7px 0 0;color:#aaa;font-size:11px}.keyword-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-size:13px;font-weight:800;cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
 .img{aspect-ratio:1;background:#f1f2f4;display:grid;place-items:center;overflow:hidden}.img img{width:100%;height:100%;object-fit:contain}.img.failed:after{content:"이미지를 불러올 수 없습니다";color:#999;font-size:11px}
-.body{padding:14px}.badge{min-height:18px;color:var(--accent);font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.keyword{display:inline-block;margin-left:5px;color:#777;font-weight:700}
+.body{padding:14px}.badge{min-height:18px;color:var(--accent);font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.keyword{display:inline-block;margin-left:5px;color:#777;font-weight:700}.card-meta{min-height:22px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:7px}.meta-badge{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;background:#f4f5f7;color:#666;font-size:10px;font-weight:800;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta-badge.rocket{color:#16734a;background:#eef9f3}.reason-row{min-height:22px;display:flex;gap:5px;flex-wrap:wrap}.reason{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;background:#fff4ef;color:#a33f20;font-size:10px;font-weight:800;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .title{min-height:44px;font-size:14px;line-height:1.5;font-weight:700;margin-top:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .price{font-size:20px;font-weight:900;margin-top:10px;letter-spacing:-.4px}.discount{color:var(--accent);margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:500}
-.buy{display:block;margin-top:13px;padding:10px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800}
+.buy{display:block;margin-top:13px;padding:11px 10px;min-height:42px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800;touch-action:manipulation}
 .empty{grid-column:1/-1;text-align:center;color:#777;padding:45px 0;background:#fff;border:1px solid var(--line);border-radius:18px}.empty strong{display:block;color:#333;font-size:15px;margin-bottom:6px}.search-tools{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}.filter-row{display:flex;gap:7px;overflow:auto;scrollbar-width:none}.filter-row::-webkit-scrollbar{display:none}.filter-title{font-size:11px;font-weight:900;color:#888;align-self:center;white-space:nowrap}.search-reset{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#999;font-size:18px;cursor:pointer;padding:4px;display:none}.search-reset.show{display:block}.reason-row{display:flex;gap:5px;min-height:18px;overflow:hidden}.reason{display:inline-block;padding:3px 6px;border-radius:999px;background:#fff1eb;color:var(--accent);font-size:10px;font-weight:900;white-space:nowrap}.more-wrap{text-align:center;margin-top:14px}.more-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 15px;font-size:12px;font-weight:800;cursor:pointer}
 .hidden{display:none!important}footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
 @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 34px 10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
+@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 34px 10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.buy{min-height:44px;padding:12px 8px}.meta-badge{font-size:9px;padding:4px 6px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
 </style>
 </head>
 <body>
@@ -109,7 +116,7 @@ rocketProducts:[
 {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
 {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
-let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체",sortMode="recommended",searchKeyword="",searchPrice="전체",searchCategory="전체",searchSort="recommended";
+let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체",sortMode="recommended",searchKeyword="",searchTrendOnly=false,searchPrice="전체",searchCategory="전체",searchSort="recommended";
 const homeLimits={deals:6,discovery:6,rocket:6};
 const expandedSections={deals:false,rocket:false};
 
@@ -182,7 +189,19 @@ return labels.slice(0,2)
 }
 
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
-function cardHtml(item,options={}){const price=parsePrice(item.price),original=parsePrice(item.originalPrice),rate=Number(item.discountRate);const discount=Number.isFinite(rate)?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";const old=original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");const reasons=getReasonLabels(item,Boolean(options.discovery));const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"<div class=\"reason-row\"></div>";return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div><div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'}
+function cardHtml(item,options={}){
+const price=parsePrice(item.price),original=parsePrice(item.originalPrice),rate=Number(item.discountRate);
+const discount=Number.isFinite(rate)?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";
+const old=original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";
+const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
+const reasons=getReasonLabels(item,Boolean(options.discovery));
+const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(Boolean):[];
+const keyword=trendKeywords[0]||item.keyword;
+const meta=(keyword||item.rocket)?'<div class="card-meta">'+(keyword?'<span class="meta-badge">관심 키워드: '+escapeHtml(keyword)+'</span>':"")+(item.rocket?'<span class="meta-badge rocket">🚀 로켓배송</span>':"")+'</div>':"";
+const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"<div class=\"reason-row\"></div>";
+return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
+}
+
 
 // 상품 이미지를 실패해도 깨진 이미지 아이콘 대신 안내 영역을 표시합니다.
 function bindImageFallback(container){container.querySelectorAll(".img img").forEach(img=>{img.onerror=()=>{img.removeAttribute("src");img.parentElement.classList.add("failed")}})}
@@ -194,31 +213,41 @@ function drawMoreButton(containerId,allItems,visibleCount,expanded,label){const 
 
 // 오늘의 발견은 실제 API 상품 중 조건에 맞는 상품을 카드로 보여줍니다.
 function getDiscoveryItems(){
-const all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.rocketProducts]);
+const all=uniqueProducts([...productData.trendingSearch,...productData.rocketProducts]);
 const specialIds=new Set(uniqueProducts(productData.specialDeals).map(i=>String(i.id||i.url||i.name)));
 const candidates=all.filter(i=>!specialIds.has(String(i.id||i.url||i.name)));
 
-// 실제 데이터에 있는 트렌드 연결 상품을 먼저 보여주고, 가격/로켓 조건은 그 다음 보조 근거로 사용합니다.
+const keyOf=item=>String(item.id||item.url||item.name);
+const categoryOf=item=>String(item.category||"기타").trim()||"기타";
 const hasTrend=item=>Boolean((Array.isArray(item.trendKeywords)&&item.trendKeywords.length)||item.keyword);
+const hasUsefulPrice=item=>{const price=parsePrice(item.price);return price!=null&&price<=30000};
 const selected=[];
-for(const item of [
-...candidates.filter(hasTrend),
-...candidates.filter(i=>parsePrice(i.price)!=null&&parsePrice(i.price)<=30000),
-...candidates.filter(i=>i.rocket)
-]){
-const key=String(item.id||item.url||item.name);
-if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);
-if(selected.length>=6)break;
-}
+const selectedKeys=new Set();
+const usedCategories=new Set();
 
-// 상품이 충분하지 않은 경우에만 남은 실제 상품으로 빈칸을 채웁니다.
-if(selected.length<4){
-for(const item of candidates){
-const key=String(item.id||item.url||item.name);
-if(!selected.some(x=>String(x.id||x.url||x.name)===key))selected.push(item);
-if(selected.length>=6)break;
-}
-}
+const addCandidate=(item,preferNewCategory=false)=>{
+const key=keyOf(item);
+if(!key||selectedKeys.has(key)||selected.length>=6)return false;
+const category=categoryOf(item);
+if(preferNewCategory&&usedCategories.has(category))return false;
+selected.push(item);
+selectedKeys.add(key);
+usedCategories.add(category);
+return true;
+};
+
+// 트렌드 연결 상품을 우선하되, 같은 카테고리가 몰리지 않도록 먼저 다른 카테고리를 채웁니다.
+for(const item of candidates.filter(hasTrend))addCandidate(item,true);
+
+// 트렌드 상품만으로 부족하면 가격 조건과 로켓배송이라는 실제 데이터 근거를 사용합니다.
+for(const item of candidates.filter(hasUsefulPrice))addCandidate(item,true);
+for(const item of candidates.filter(i=>i.rocket))addCandidate(item,true);
+
+// 카테고리 다양성으로 6개를 채우지 못한 경우에만 기존 카테고리 상품을 추가합니다.
+for(const item of candidates.filter(hasTrend))addCandidate(item);
+for(const item of candidates.filter(hasUsefulPrice))addCandidate(item);
+for(const item of candidates.filter(i=>i.rocket))addCandidate(item);
+
 return selected.slice(0,6)
 }
 
@@ -240,6 +269,7 @@ setSectionVisible("trendSection",keywords.length>0&&!searchKeyword);
 document.getElementById("keywords").innerHTML=keywords.map(k=>'<button class="keyword-chip" data-keyword="'+escapeHtml(k)+'">'+escapeHtml(k)+"</button>").join("");
 document.querySelectorAll("[data-keyword]").forEach(b=>b.onclick=()=>{
 searchKeyword=b.dataset.keyword;
+searchTrendOnly=true;
 document.getElementById("q").value=searchKeyword;
 selectedCategory="전체";
 draw();
@@ -250,10 +280,24 @@ document.getElementById("searchSection").scrollIntoView({behavior:"smooth"})
 function getSearchAll(){return uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.popularProducts,...productData.rocketProducts])}
 function drawSearchTools(all){const categories=["전체",...new Set(all.map(i=>i.category).filter(Boolean))];const prices=["전체","1만원 이하","3만원 이하","5만원 이하"];const sorts=[["recommended","기본순"],["low","낮은 가격순"],["high","높은 가격순"],["discount","할인율순"]];document.getElementById("searchTools").innerHTML='<div class="filter-row"><span class="filter-title">가격</span>'+prices.map(p=>'<button class="sort '+(searchPrice===p?"on":"")+'" data-search-price="'+escapeHtml(p)+'">'+p+"</button>").join("")+'</div><div class="filter-row"><span class="filter-title">카테고리</span>'+categories.map(c=>'<button class="sort '+(searchCategory===c?"on":"")+'" data-search-category="'+escapeHtml(c)+'">'+escapeHtml(c)+"</button>").join("")+'</div><div class="filter-row"><span class="filter-title">정렬</span>'+sorts.map(([k,l])=>'<button class="sort '+(searchSort===k?"on":"")+'" data-search-sort="'+k+'">'+l+"</button>").join("")+'</div>';document.querySelectorAll("[data-search-price]").forEach(b=>b.onclick=()=>{searchPrice=b.dataset.searchPrice;draw()});document.querySelectorAll("[data-search-category]").forEach(b=>b.onclick=()=>{searchCategory=b.dataset.searchCategory;draw()});document.querySelectorAll("[data-search-sort]").forEach(b=>b.onclick=()=>{searchSort=b.dataset.searchSort;draw()})}
 function sortSearchItems(items){return [...items].sort((a,b)=>{if(searchSort==="low")return(parsePrice(a.price)??Infinity)-(parsePrice(b.price)??Infinity);if(searchSort==="high")return(parsePrice(b.price)??-Infinity)-(parsePrice(a.price)??-Infinity);if(searchSort==="discount")return(Number(b.discountRate)||-Infinity)-(Number(a.discountRate)||-Infinity);return 0})}
-function filterSearchItems(items){const q=searchKeyword.toLowerCase().trim();const limits={"1만원 이하":10000,"3만원 이하":30000,"5만원 이하":50000};return items.filter(item=>{const name=String(item.name||"").toLowerCase(),keyword=String(item.keyword||"").toLowerCase(),trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.join(" ").toLowerCase():"",price=parsePrice(item.price);return(!q||name.includes(q)||keyword.includes(q)||trendKeywords.includes(q))&&(searchCategory==="전체"||item.category===searchCategory)&&(searchPrice==="전체"||(price!=null&&price<=limits[searchPrice]))})}
+function filterSearchItems(items){
+const q=searchKeyword.toLowerCase().trim();
+const limits={"1만원 이하":10000,"3만원 이하":30000,"5만원 이하":50000};
+return items.filter(item=>{
+const name=String(item.name||"").toLowerCase();
+const keyword=String(item.keyword||"").toLowerCase();
+const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.map(String):[];
+const trendMatch=keyword===q||trendKeywords.some(k=>k.toLowerCase()===q);
+const textMatch=!q||name.includes(q)||keyword.includes(q)||trendKeywords.join(" ").toLowerCase().includes(q);
+const price=parsePrice(item.price);
+return(searchTrendOnly?(q&&trendMatch):textMatch)
+&&(searchCategory==="전체"||item.category===searchCategory)
+&&(searchPrice==="전체"||(price!=null&&price<=limits[searchPrice]));
+})}
+
 
 // 검색 결과 전용 화면을 그립니다.
-function drawSearch(){const section=document.getElementById("searchSection");const reset=document.getElementById("searchReset");if(!searchKeyword){section.classList.add("hidden");document.querySelector(".hero").classList.remove("hidden");document.getElementById("quickPrices").classList.remove("hidden");document.getElementById("tabs").classList.remove("hidden");reset.classList.remove("show");return}section.classList.remove("hidden");document.querySelector(".hero").classList.add("hidden");document.getElementById("quickPrices").classList.add("hidden");document.getElementById("tabs").classList.add("hidden");reset.classList.add("show");const all=getSearchAll();const results=sortSearchItems(filterSearchItems(all));document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";document.getElementById("searchDescription").textContent="상품명과 검색 키워드에서 찾은 결과입니다.";document.getElementById("searchCount").textContent=results.length?results.length+"개 상품":"";drawSearchTools(all);if(results.length)drawGrid("searchGrid",results);else document.getElementById("searchGrid").innerHTML='<div class="empty"><strong>검색 결과가 없습니다.</strong>다른 검색어로 다시 찾아보세요.</div>'}
+function drawSearch(){const section=document.getElementById("searchSection");const reset=document.getElementById("searchReset");if(!searchKeyword){section.classList.add("hidden");document.querySelector(".hero").classList.remove("hidden");document.getElementById("quickPrices").classList.remove("hidden");document.getElementById("tabs").classList.remove("hidden");reset.classList.remove("show");return}section.classList.remove("hidden");document.querySelector(".hero").classList.add("hidden");document.getElementById("quickPrices").classList.add("hidden");document.getElementById("tabs").classList.add("hidden");reset.classList.add("show");const all=getSearchAll();const results=sortSearchItems(filterSearchItems(all));document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";document.getElementById("searchDescription").textContent=searchTrendOnly?"오늘의 관심 키워드와 실제 연결된 상품입니다.":"상품명과 검색 키워드에서 찾은 결과입니다.";document.getElementById("searchCount").textContent=results.length?results.length+"개 상품":"";drawSearchTools(all);if(results.length)drawGrid("searchGrid",results);else document.getElementById("searchGrid").innerHTML='<div class="empty"><strong>검색 결과가 없습니다.</strong>다른 검색어로 다시 찾아보세요.<button class="more-btn" id="emptySearchReset" type="button">전체 상품 보기</button></div>';const emptyReset=document.getElementById("emptySearchReset");if(emptyReset)emptyReset.onclick=()=>document.getElementById("searchReset").click()'}
 
 // 로켓배송은 위에서 이미 노출된 상품을 우선 제외합니다.
 function drawRocket(){const raw=uniqueProducts(productData.rocketProducts);const seen=new Set([...uniqueProducts(productData.specialDeals),...getDiscoveryItems()].map(i=>String(i.id||i.url||i.name)));let items=filterItems(raw).filter(i=>!seen.has(String(i.id||i.url||i.name)));if(items.length<2)items=filterItems(raw);setSectionVisible("rocketSection",raw.length>0&&!searchKeyword);document.getElementById("rocketCount").textContent=items.length?items.length+"개 상품":"";if(!searchKeyword){const visible=expandedSections.rocket?items:items.slice(0,6);drawGrid("rocketGrid",visible);drawMoreButton("rocketMore",items,6,expandedSections.rocket,"로켓배송")}}
@@ -288,8 +332,8 @@ function draw(){ensureActiveTab();drawQuickPrices();drawTabs();drawSearch();draw
 async function loadProducts(){const grid=document.getElementById("grid");grid.innerHTML='<div class="empty">상품을 불러오는 중...</div>';try{const response=await fetch("/api/products"),data=await response.json();if(!response.ok||!data||Array.isArray(data))throw new Error(data?.error||"상품 정보를 불러오지 못했습니다.");productData={specialDeals:Array.isArray(data.specialDeals)?data.specialDeals:[],trendingSearch:Array.isArray(data.trendingSearch)?data.trendingSearch:[],popularProducts:Array.isArray(data.popularProducts)?data.popularProducts:[],trendKeywords:Array.isArray(data.trendKeywords)?data.trendKeywords:[],rocketProducts:Array.isArray(data.rocketProducts)?data.rocketProducts:[]};const hasProducts=Object.values(productData).some(list=>list.length>0);if(!hasProducts&&PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false}draw()}catch(error){if(PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false;draw();console.warn("미리보기 데이터 사용:",error.message);return}grid.innerHTML='<div class="empty">'+escapeHtml(error.message||"상품 정보를 불러오지 못했습니다.")+"</div>";console.error(error)}}
 
 // 검색어가 바뀌면 즉시 상품을 필터링하고, 비우면 일반 화면으로 돌아갑니다.
-document.getElementById("q").oninput=()=>{searchKeyword=document.getElementById("q").value.trim();searchPrice="전체";searchCategory="전체";searchSort="recommended";draw()};
-document.getElementById("searchReset").onclick=()=>{document.getElementById("q").value="";searchKeyword="";searchPrice="전체";searchCategory="전체";searchSort="recommended";draw();document.getElementById("q").focus()};
+document.getElementById("q").oninput=()=>{searchKeyword=document.getElementById("q").value.trim();searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";draw()};
+document.getElementById("searchReset").onclick=()=>{document.getElementById("q").value="";searchKeyword="";searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";draw();document.getElementById("q").focus()};
 document.getElementById("q").addEventListener("keydown",event=>{if(event.key==="Escape"){document.getElementById("searchReset").click()}});
 
 // 초기 화면을 상품 API와 함께 로드합니다.
