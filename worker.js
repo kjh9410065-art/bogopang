@@ -152,6 +152,18 @@ async function coupangRequest(method, path, env, body) {
 
 // 오늘의 특가, 인기검색, 인기상품, 로켓배송을 목적별로 분리해 반환합니다.
 async function loadProducts(env) {
+  const stats = {
+    trends: 0,
+    search: 0,
+    searchKeywords: 0,
+    goldbox: 0,
+    combined: 0,
+    deeplinkRequested: 0,
+    deeplinkReturned: 0,
+    deeplinkMatched: 0,
+    final: 0
+  };
+
   // Gold Box 실패가 전체 상품 수집 실패로 이어지지 않도록 독립적으로 처리합니다.
   let goldboxProducts = [];
   try {
@@ -169,6 +181,7 @@ async function loadProducts(env) {
 
   // 외부 트렌드에서 상품과 연결하기 좋은 후보를 먼저 선정합니다.
   const trendSignals = await loadTrendSignals(env);
+  stats.trends = trendSignals.filter((signal) => !signal.isFallback).length;
 
   // 트렌드가 모두 비상품성 키워드인 날에도 실제 쿠팡 상품 수집이 멈추지 않도록
   // 별도의 고정 상품 검색어를 fallback으로 사용합니다. fallback은 실제 상품 데이터가 아닙니다.
@@ -182,18 +195,6 @@ async function loadProducts(env) {
 
   const trendingRaw = [];
   const usedSignals = [];
-  const stats = {
-    trends: trendSignals.filter((signal) => !signal.isFallback).length,
-    search: 0,
-    searchKeywords: 0,
-    goldbox: 0,
-    combined: 0,
-    deeplinkRequested: 0,
-    deeplinkReturned: 0,
-    deeplinkMatched: 0,
-    final: 0
-  };
-
   const productIdentity = (item) =>
     String(item.productId || item.productUrl || item.productName || "");
 
@@ -240,6 +241,45 @@ async function loadProducts(env) {
       );
     } catch (error) {
       console.error("보고팡 트렌드 상품 조회 실패:", signal.keyword, error.message);
+    }
+  }
+
+  // 트렌드 키워드는 있었지만 쿠팡 검색 결과가 하나도 없으면
+  // 별도의 상품 검색어로 다시 시도해 수집 전체가 0개가 되는 것을 방지합니다.
+  if (!trendingRaw.length && trendSignals.length) {
+    for (const keyword of FALLBACK_SEARCH_KEYWORDS.slice(0, 3)) {
+      try {
+        const query =
+          `?keyword=${encodeURIComponent(keyword)}&limit=${COUPANG_SEARCH_PRODUCT_LIMIT}`;
+        const result = await coupangRequest("GET", SEARCH_PATH + query, env);
+        const products = Array.isArray(result.data?.productData)
+          ? result.data.productData
+          : Array.isArray(result.data)
+            ? result.data
+            : [];
+
+        stats.searchKeywords += 1;
+        stats.search += products.length;
+        usedSignals.push({
+          keyword,
+          source: "기본 상품 탐색",
+          isFallback: true
+        });
+
+        trendingRaw.push(
+          ...products.map((item) => ({
+            ...item,
+            trendKeyword: keyword,
+            trendKeywords: [keyword],
+            trendSource: "기본 상품 탐색",
+            trendIsFallback: true
+          }))
+        );
+
+        if (trendingRaw.length >= MIN_TRENDING_PRODUCTS) break;
+      } catch (error) {
+        console.error("보고팡 fallback 상품 조회 실패:", keyword, error.message);
+      }
     }
   }
 
