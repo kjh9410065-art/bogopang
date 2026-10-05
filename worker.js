@@ -12,7 +12,7 @@ const TREND_KEYWORD_LIMIT = 8;
 const TREND_KEYWORD_CANDIDATE_LIMIT = 12;
 const MIN_TRENDING_PRODUCTS = 8;
 const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
-const CACHE_URL = "https://bogopang.tcflick.com/api/products?refresh=2026-10-02";
+const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
 export default {
   async fetch(request, env, ctx) {
