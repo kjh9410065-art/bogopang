@@ -558,19 +558,35 @@ async function loadProducts(env) {
         ? [item.trendKeyword]
         : [];
 
+    // 쿠팡 API가 제공하는 여러 정상가 필드 중 실제 값이 있는 첫 번째 가격을 사용합니다.
+    const originalPriceCandidates = [
+      item.originalPrice,
+      item.productOriginalPrice,
+      item.listPrice
+    ];
+    const originalPrice = originalPriceCandidates
+      .map((value) => Number(value))
+      .find((value) => Number.isFinite(value) && value > 0) ?? null;
+
+    // 쿠팡 API의 할인율을 우선 사용하되, 없거나 0이면 정상가와 판매가로 계산합니다.
+    const apiDiscountRate = Number(item.discountRate ?? item.discountRatePercent);
+    const calculatedDiscountRate =
+      originalPrice != null && originalPrice > price
+        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+        : null;
+    const discountRate =
+      originalPrice != null && originalPrice > price
+        ? Number.isFinite(apiDiscountRate) && apiDiscountRate > 0
+          ? Math.round(apiDiscountRate)
+          : calculatedDiscountRate
+        : null;
+
     return {
       id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
       price,
-      originalPrice:
-        item.originalPrice ??
-        item.productOriginalPrice ??
-        item.listPrice ??
-        null,
-      discountRate:
-        item.discountRate ??
-        item.discountRatePercent ??
-        null,
+      originalPrice,
+      discountRate,
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
