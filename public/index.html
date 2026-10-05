@@ -371,7 +371,7 @@ const keywords=storedKeywords.length
 const sources=[...new Set(storedKeywords.map(item=>typeof item==="string"?null:item.source).filter(Boolean))];
 document.getElementById("trendSource").textContent=sources.length?("출처: "+sources.join(" · ")):"출처: Google Trends";
 const section=document.getElementById("trendSection");
-setSectionVisible("trendSection",keywords.length>0&&!searchKeyword);
+setSectionVisible("trendSection",keywords.length>0&&(activePage==="trends"||!searchKeyword));
 document.getElementById("keywords").innerHTML=keywords.map(k=>'<button class="keyword-chip" data-keyword="'+escapeHtml(k)+'">'+escapeHtml(k)+"</button>").join("");
 document.querySelectorAll("[data-keyword]").forEach(b=>b.onclick=()=>{
 navigateToPage("trends");
@@ -410,7 +410,7 @@ function drawRocket(){const raw=uniqueProducts(productData.rocketProducts);const
 // 카테고리 페이지와 오늘의 검색 페이지의 상품 목록을 그립니다.
 function drawBrowse(){
 const browse=document.getElementById("browseSection");
-if(searchKeyword||activePage==="home"||activePage==="deals"||activePage==="discovery"||activePage==="rocket"){
+if((searchKeyword&&activePage!=="trends")||activePage==="home"||activePage==="deals"||activePage==="discovery"||activePage==="rocket"){
 browse.classList.add("hidden");
 return;
 }
@@ -422,6 +422,14 @@ let filtered=all;
 if(activePage==="trends"){
 all=uniqueProducts(productData.trendingSearch);
 filtered=all;
+if(searchKeyword){
+const q=searchKeyword.toLowerCase();
+filtered=filtered.filter(item=>{
+const keyword=String(item.keyword||"").toLowerCase();
+const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.map(String):[];
+return keyword===q||trendKeywords.some(k=>k.toLowerCase()===q);
+});
+}
 }else if(activeCategoryPage!=="전체"){
 filtered=all.filter(item=>getFixedCategory(item)===activeCategoryPage);
 }
