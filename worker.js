@@ -31,8 +31,8 @@ export default {
       }
 
       try {
-        await refreshProducts(env);
-        return new Response(JSON.stringify({ ok: true, message: "상품 갱신 완료" }), {
+        const result = await refreshProducts(env);
+        return new Response(JSON.stringify({ ok: true, productCount: result.productCount, message: "상품 갱신 완료" }), {
           headers: { "Content-Type": "application/json; charset=UTF-8" }
         });
       } catch (error) {
@@ -151,13 +151,19 @@ async function coupangRequest(method, path, env, body) {
 
 // 오늘의 특가, 인기검색, 인기상품, 로켓배송을 목적별로 분리해 반환합니다.
 async function loadProducts(env) {
-  // Gold Box는 별도의 공식 특가 데이터이므로 한 번만 조회합니다.
-  const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
-  const goldboxProducts = Array.isArray(goldbox.data)
-    ? goldbox.data
-    : Array.isArray(goldbox.data?.productData)
-      ? goldbox.data.productData
-      : [];
+  // Gold Box 실패가 전체 상품 수집 실패로 이어지지 않도록 독립적으로 처리합니다.
+  let goldboxProducts = [];
+  try {
+    const goldbox = await coupangRequest("GET", GOLD_BOX_PATH, env);
+    goldboxProducts = Array.isArray(goldbox.data)
+      ? goldbox.data
+      : Array.isArray(goldbox.data?.productData)
+        ? goldbox.data.productData
+        : [];
+    console.log("보고팡 Gold Box 상품 수:", goldboxProducts.length);
+  } catch (error) {
+    console.error("보고팡 Gold Box 조회 실패:", error.message);
+  }
 
   // 외부 트렌드에서 상품과 연결하기 좋은 후보를 먼저 선정합니다.
   const trendSignals = await loadTrendSignals(env);
@@ -192,8 +198,11 @@ async function loadProducts(env) {
       const result = await coupangRequest("GET", SEARCH_PATH + query, env);
       const products = Array.isArray(result.data?.productData)
         ? result.data.productData
-        : [];
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
 
+      console.log("보고팡 트렌드 검색 상품 수:", signal.keyword, products.length);
       usedSignals.push(signal);
 
       trendingRaw.push(
@@ -293,6 +302,25 @@ async function loadProducts(env) {
       }
     } catch (error) {
       console.error("보고팡 딥링크 배치 변환 실패:", error.message);
+
+      // 배치 변환이 실패해도 개별 변환을 재시도해 전체 상품이 사라지지 않게 합니다.
+      for (const originalUrl of urls) {
+        try {
+          const single = await coupangRequest(
+            "POST",
+            DEEPLINK_PATH,
+            env,
+            { coupangUrls: [originalUrl] }
+          );
+
+          for (const link of single.data || []) {
+            const partnerUrl = link.shortenUrl || link.landingUrl;
+            if (partnerUrl) converted.push([link.originalUrl, partnerUrl]);
+          }
+        } catch (singleError) {
+          console.error("보고팡 개별 딥링크 변환 실패:", originalUrl, singleError.message);
+        }
+      }
     }
   }
 
@@ -337,20 +365,36 @@ async function loadProducts(env) {
     };
   };
 
+  const specialDeals = uniqueById(goldboxProducts)
+    .map((item) => toSiteProduct(item, "오늘의 특가"))
+    .filter(Boolean);
+
+  const trendingSearch = uniqueById(trendingRaw)
+    .map((item) => toSiteProduct(item, "오늘의 관심 키워드"))
+    .filter(Boolean);
+
+  const rocketProducts = rocketRaw
+    .map((item) => toSiteProduct(item, "로켓배송"))
+    .filter(Boolean);
+
+  const products = [...specialDeals, ...trendingSearch, ...rocketProducts];
+
+  console.log("보고팡 최종 상품 수:", {
+    goldbox: goldboxProducts.length,
+    trending: trendingRaw.length,
+    rocket: rocketRaw.length,
+    affiliate: products.length
+  });
+
+  if (!products.length) {
+    throw new Error("쿠팡 API에서 사용할 수 있는 상품이 0개입니다.");
+  }
+
   return {
-    specialDeals: uniqueById(goldboxProducts)
-      .map((item) => toSiteProduct(item, "오늘의 특가"))
-      .filter(Boolean),
-
-    trendingSearch: uniqueById(trendingRaw)
-      .map((item) => toSiteProduct(item, "오늘의 관심 키워드"))
-      .filter(Boolean),
-
+    specialDeals,
+    trendingSearch,
     popularProducts: [],
-
-    rocketProducts: rocketRaw
-      .map((item) => toSiteProduct(item, "로켓배송"))
-      .filter(Boolean),
+    rocketProducts,
 
     // 실제로 검색에 사용한 외부 트렌드 키워드와 출처만 저장합니다.
     trendKeywords: usedSignals.map((signal) => ({
@@ -534,6 +578,13 @@ function decodeXml(value) {
     .replace(/&gt;/g, ">");
 }
 
+// 상품 데이터에 실제 표시 가능한 상품이 있는지 확인합니다.
+function hasProducts(data) {
+  if (!data || Array.isArray(data)) return false;
+  return ["specialDeals", "trendingSearch", "rocketProducts"]
+    .some((key) => Array.isArray(data[key]) && data[key].length > 0);
+}
+
 // 상품 데이터를 1시간 캐시해 쿠팡 가격 변경을 하루 종일 늦게 반영하는 문제를 줄입니다.
 async function getProductsResponse(env, ctx) {
   const request = new Request(CACHE_URL, { method: "GET" });
@@ -542,7 +593,6 @@ async function getProductsResponse(env, ctx) {
   // 먼저 기존 상품 데이터를 확인합니다.
   const cached = await cache.match(request);
   if (cached) {
-    // 구조 변경 전의 배열 캐시가 남아 있으면 새 구조로 다시 생성합니다.
     try {
       const cachedData = await cached.clone().json();
       if (
@@ -552,7 +602,8 @@ async function getProductsResponse(env, ctx) {
         Array.isArray(cachedData.trendingSearch) &&
         Array.isArray(cachedData.popularProducts) &&
         Array.isArray(cachedData.rocketProducts) &&
-        Array.isArray(cachedData.trendKeywords)
+        Array.isArray(cachedData.trendKeywords) &&
+        hasProducts(cachedData)
       ) {
         return cached;
       }
@@ -561,7 +612,7 @@ async function getProductsResponse(env, ctx) {
     }
   }
 
-  // 캐시가 없거나 이전 구조의 캐시라면 쿠팡에서 새 상품을 가져옵니다.
+  // 캐시가 없거나 비어 있으면 쿠팡에서 새 상품을 가져옵니다.
   try {
     const products = await loadProducts(env);
     const response = new Response(JSON.stringify(products), {
@@ -571,7 +622,6 @@ async function getProductsResponse(env, ctx) {
       }
     });
 
-    // 다음 요청에서 같은 데이터를 재사용합니다.
     ctx.waitUntil(cache.put(request, response.clone()));
     return response;
   } catch (error) {
@@ -587,13 +637,18 @@ async function getProductsResponse(env, ctx) {
   }
 }
 
-// 예약 갱신이 활성화된 경우 상품 캐시를 새 데이터로 교체합니다.
+// 수동/예약 갱신은 새 데이터가 실제 상품을 포함할 때만 기존 캐시를 교체합니다.
 async function refreshProducts(env) {
   const cache = caches.default;
   const request = new Request(CACHE_URL, { method: "GET" });
 
   try {
     const products = await loadProducts(env);
+
+    if (!hasProducts(products)) {
+      throw new Error("새 상품 데이터가 0개라 기존 캐시를 유지합니다.");
+    }
+
     const response = new Response(JSON.stringify(products), {
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
@@ -601,10 +656,16 @@ async function refreshProducts(env) {
       }
     });
 
-    // 기존 캐시를 오늘의 상품 데이터로 덮어씁니다.
     await cache.put(request, response);
-    console.log("보고팡 상품 일일 갱신 완료:", new Date().toISOString());
+    console.log("보고팡 상품 갱신 완료:", new Date().toISOString());
+    return {
+      productCount:
+        products.specialDeals.length +
+        products.trendingSearch.length +
+        products.rocketProducts.length
+    };
   } catch (error) {
-    console.error("보고팡 일일 갱신 실패:", error);
+    console.error("보고팡 상품 갱신 실패:", error);
+    throw error;
   }
 }
