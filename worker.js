@@ -12,6 +12,7 @@ const TREND_KEYWORD_LIMIT = 8;
 const TREND_KEYWORD_CANDIDATE_LIMIT = 12;
 const MIN_TRENDING_PRODUCTS = 8;
 const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
+const FALLBACK_SEARCH_KEYWORDS = ["생활용품", "주방용품", "식품", "가전", "디지털"];
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
 export default {
@@ -137,7 +138,7 @@ async function coupangRequest(method, path, env, body) {
   }
 
   // 쿠팡 파트너스 API의 정상 응답과 오류 응답 형식을 함께 확인합니다.
-  if (!response.ok || (data.rCode !== undefined && data.rCode !== "0")) {
+  if (!response.ok || (data.rCode !== undefined && String(data.rCode) !== "0")) {
     throw new Error(
       data.rMessage ||
       data.message ||
@@ -160,6 +161,7 @@ async function loadProducts(env) {
       : Array.isArray(goldbox.data?.productData)
         ? goldbox.data.productData
         : [];
+    stats.goldbox = goldboxProducts.length;
     console.log("보고팡 Gold Box 상품 수:", goldboxProducts.length);
   } catch (error) {
     console.error("보고팡 Gold Box 조회 실패:", error.message);
@@ -168,10 +170,29 @@ async function loadProducts(env) {
   // 외부 트렌드에서 상품과 연결하기 좋은 후보를 먼저 선정합니다.
   const trendSignals = await loadTrendSignals(env);
 
-  // 트렌드 상품은 최대 8개 키워드를 먼저 검색하고,
-  // 결과가 부족할 때만 남은 적합 키워드를 추가로 사용합니다.
+  // 트렌드가 모두 비상품성 키워드인 날에도 실제 쿠팡 상품 수집이 멈추지 않도록
+  // 별도의 고정 상품 검색어를 fallback으로 사용합니다. fallback은 실제 상품 데이터가 아닙니다.
+  const searchSignals = trendSignals.length
+    ? trendSignals.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT)
+    : FALLBACK_SEARCH_KEYWORDS.map((keyword) => ({
+        keyword,
+        source: "기본 상품 탐색",
+        isFallback: true
+      }));
+
   const trendingRaw = [];
   const usedSignals = [];
+  const stats = {
+    trends: trendSignals.filter((signal) => !signal.isFallback).length,
+    search: 0,
+    searchKeywords: 0,
+    goldbox: 0,
+    combined: 0,
+    deeplinkRequested: 0,
+    deeplinkReturned: 0,
+    deeplinkMatched: 0,
+    final: 0
+  };
 
   const productIdentity = (item) =>
     String(item.productId || item.productUrl || item.productName || "");
@@ -185,10 +206,11 @@ async function loadProducts(env) {
     return seen.size;
   };
 
-  const searchSignals = trendSignals.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
-
   for (const signal of searchSignals) {
-    if (usedSignals.length >= TREND_KEYWORD_LIMIT || countUniqueProducts() >= MIN_TRENDING_PRODUCTS) {
+    if (
+      usedSignals.length >= TREND_KEYWORD_LIMIT ||
+      countUniqueProducts() >= MIN_TRENDING_PRODUCTS
+    ) {
       break;
     }
 
@@ -203,6 +225,8 @@ async function loadProducts(env) {
           : [];
 
       console.log("보고팡 트렌드 검색 상품 수:", signal.keyword, products.length);
+      stats.searchKeywords += 1;
+      stats.search += products.length;
       usedSignals.push(signal);
 
       trendingRaw.push(
@@ -210,7 +234,8 @@ async function loadProducts(env) {
           ...item,
           trendKeyword: signal.keyword,
           trendKeywords: [signal.keyword],
-          trendSource: signal.source
+          trendSource: signal.source,
+          trendIsFallback: Boolean(signal.isFallback)
         }))
       );
     } catch (error) {
@@ -273,6 +298,46 @@ async function loadProducts(env) {
     ...popularRaw,
     ...rocketRaw
   ]);
+  stats.combined = allRaw.length;
+
+  // 쿠팡 URL의 표기 차이(query/hash/trailing slash)를 제거해 안전하게 비교합니다.
+  const normalizeCoupangUrl = (value) => {
+    try {
+      const url = new URL(String(value || "").trim());
+      url.hash = "";
+      url.search = "";
+      url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+      return `${url.hostname.toLowerCase()}${url.pathname}`;
+    } catch {
+      return String(value || "").trim().replace(/[?#].*$/, "").replace(/\/+$/, "");
+    }
+  };
+
+  // 쿠팡 상품 URL에서 노출 상품 ID를 추출합니다.
+  const extractProductId = (value) => {
+    const match = String(value || "").match(/\/vp\/products\/(\d+)/i);
+    return match ? String(match[1]) : "";
+  };
+
+  const deeplinkRecords = [];
+
+  const addDeeplinkRecords = (links) => {
+    for (const link of Array.isArray(links) ? links : []) {
+      const originalUrl = String(link?.originalUrl || "").trim();
+      const partnerUrl = String(link?.shortenUrl || link?.landingUrl || "").trim();
+
+      // 실제 제휴 URL이 없는 응답만 개별적으로 제외합니다.
+      if (!partnerUrl) continue;
+
+      deeplinkRecords.push({
+        originalUrl,
+        partnerUrl,
+        productId: extractProductId(originalUrl),
+        normalizedUrl: normalizeCoupangUrl(originalUrl)
+      });
+      stats.deeplinkReturned += 1;
+    }
+  };
 
   const converted = [];
 
@@ -280,13 +345,17 @@ async function loadProducts(env) {
     const batch = allRaw.slice(i, i + 50);
     const urls = batch
       .map((item) =>
-        item.productId
-          ? `https://www.coupang.com/vp/products/${item.productId}`
-          : item.productUrl
+        item.productUrl || (
+          item.productId
+            ? `https://www.coupang.com/vp/products/${item.productId}`
+            : ""
+        )
       )
       .filter(Boolean);
 
     if (!urls.length) continue;
+
+    stats.deeplinkRequested += urls.length;
 
     try {
       const deeplink = await coupangRequest(
@@ -296,10 +365,7 @@ async function loadProducts(env) {
         { coupangUrls: urls }
       );
 
-      for (const link of deeplink.data || []) {
-        const partnerUrl = link.shortenUrl || link.landingUrl;
-        if (partnerUrl) converted.push([link.originalUrl, partnerUrl]);
-      }
+      addDeeplinkRecords(deeplink.data);
     } catch (error) {
       console.error("보고팡 딥링크 배치 변환 실패:", error.message);
 
@@ -313,10 +379,7 @@ async function loadProducts(env) {
             { coupangUrls: [originalUrl] }
           );
 
-          for (const link of single.data || []) {
-            const partnerUrl = link.shortenUrl || link.landingUrl;
-            if (partnerUrl) converted.push([link.originalUrl, partnerUrl]);
-          }
+          addDeeplinkRecords(single.data);
         } catch (singleError) {
           console.error("보고팡 개별 딥링크 변환 실패:", originalUrl, singleError.message);
         }
@@ -324,25 +387,55 @@ async function loadProducts(env) {
     }
   }
 
-  const linkMap = new Map(converted);
+  // 동일한 딥링크 응답이 중복으로 들어와도 한 번만 사용합니다.
+  const linkByProductId = new Map();
+  const linkByNormalizedUrl = new Map();
+  const linkByOriginalUrl = new Map();
+
+  for (const record of deeplinkRecords) {
+    if (record.originalUrl) {
+      linkByOriginalUrl.set(record.originalUrl, record.partnerUrl);
+      linkByNormalizedUrl.set(record.normalizedUrl, record.partnerUrl);
+    }
+    if (record.productId) {
+      linkByProductId.set(record.productId, record.partnerUrl);
+    }
+  }
+
+  // 상품마다 productId → normalized URL → exact URL 순서로 제휴 링크를 찾습니다.
+  const findPartnerUrl = (item) => {
+    const productId = String(item.productId || "").trim();
+    const productUrl = String(item.productUrl || "").trim();
+    const canonicalUrl = productId
+      ? `https://www.coupang.com/vp/products/${productId}`
+      : productUrl;
+
+    return (
+      (productId && linkByProductId.get(productId)) ||
+      linkByNormalizedUrl.get(normalizeCoupangUrl(productUrl)) ||
+      linkByNormalizedUrl.get(normalizeCoupangUrl(canonicalUrl)) ||
+      linkByOriginalUrl.get(productUrl) ||
+      linkByOriginalUrl.get(canonicalUrl) ||
+      ""
+    );
+  };
 
   // 쿠팡 원본 데이터를 보고팡 공통 상품 구조로 변환합니다.
   const toSiteProduct = (item, source) => {
-    const canonicalUrl = item.productId
-      ? `https://www.coupang.com/vp/products/${item.productId}`
-      : item.productUrl;
-    const partnerUrl = linkMap.get(canonicalUrl) || linkMap.get(item.productUrl);
+    const partnerUrl = findPartnerUrl(item);
 
-    // 필수 표시 정보와 정상적인 제휴 링크가 없는 상품은 최종 데이터에서 제외합니다.
+    // 필수 표시 정보와 실제 제휴 링크가 없는 상품만 해당 상품 단위로 제외합니다.
     if (
       !partnerUrl ||
-      !item.productId && !item.productUrl ||
+      (!item.productId && !item.productUrl) ||
       !item.productName ||
       item.productPrice == null ||
       !item.productImage
     ) {
       return null;
     }
+
+    stats.deeplinkMatched += 1;
 
     const trendKeywords = Array.isArray(item.trendKeywords)
       ? [...new Set(item.trendKeywords.filter(Boolean))]
@@ -388,11 +481,17 @@ async function loadProducts(env) {
 
   const products = [...specialDeals, ...trendingSearch, ...rocketProducts];
 
-  console.log("보고팡 최종 상품 수:", {
-    goldbox: goldboxProducts.length,
-    trending: trendingRaw.length,
-    rocket: rocketRaw.length,
-    affiliate: products.length
+  stats.final = products.length;
+  console.log("보고팡 상품 수집 단계:", {
+    trends: stats.trends,
+    search: stats.search,
+    searchKeywords: stats.searchKeywords,
+    goldbox: stats.goldbox,
+    combined: stats.combined,
+    deeplink: stats.deeplinkRequested,
+    deeplinkReturned: stats.deeplinkReturned,
+    deeplinkMatched: stats.deeplinkMatched,
+    final: stats.final
   });
 
   if (!products.length) {
@@ -406,10 +505,12 @@ async function loadProducts(env) {
     rocketProducts,
 
     // 실제로 검색에 사용한 외부 트렌드 키워드와 출처만 저장합니다.
-    trendKeywords: usedSignals.map((signal) => ({
-      keyword: signal.keyword,
-      source: signal.source
-    }))
+    trendKeywords: usedSignals
+      .filter((signal) => !signal.isFallback)
+      .map((signal) => ({
+        keyword: signal.keyword,
+        source: signal.source
+      }))
   };
 }
 // 외부 트렌드 소스를 모아 상품 탐색용 키워드를 만듭니다.
@@ -422,6 +523,10 @@ async function loadTrendSignals(env) {
 
   // 상품성 후보가 부족하면 그 수만 사용하고, 관련 없는 원본 트렌드를 상품 검색에 억지로 연결하지 않습니다.
   const selectedKeywords = productKeywords.slice(0, TREND_KEYWORD_CANDIDATE_LIMIT);
+
+  if (!selectedKeywords.length && googleKeywords.length) {
+    console.warn("보고팡: 오늘 Google Trends에는 상품성 키워드가 없습니다. 기본 상품 검색 fallback을 사용합니다.");
+  }
 
   // 네이버 DataLab 자격증명이 있으면 선정 후보를 추가 교차검증합니다.
   const naverRatios = await loadNaverTrendRatios(selectedKeywords, env);
@@ -482,12 +587,9 @@ function selectProductTrendKeywords(keywords) {
       if (productPatterns.some((pattern) => pattern.test(normalized))) return true;
       if (genericCommercePatterns.some((pattern) => pattern.test(normalized))) return true;
 
-      // 카테고리 단서가 없는 일반 검색어는 짧은 상품명 후보만 허용합니다.
-      const wordCount = normalized.split(/\s+/).filter(Boolean).length;
-      const looksLikeSentence =
-        /[?!]|검색량|급상승|순위|발표|논란|왜|어떻게|언제|누가|무슨|관련/.test(normalized);
-
-      return wordCount <= 3 && !looksLikeSentence;
+      // 카테고리/상거래 단서가 없는 일반 검색어는 상품 검색에 사용하지 않습니다.
+      // 인물명·스포츠 선수명 같은 일반 급상승어가 쿠팡 검색으로 넘어가는 것을 막습니다.
+      return false;
     })
   )];
 }
