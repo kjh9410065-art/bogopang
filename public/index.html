@@ -398,6 +398,7 @@ drawSearch();
 
 const categoryPageActive=!searchKeyword&&activeCategoryPage!=="전체";
 const dealPage=activeCategoryPage==="오늘의 특가";
+document.getElementById("tabs").classList.toggle("hidden",categoryPageActive||dealPage);
 setSectionVisible("dealSection",!categoryPageActive&&!dealPage);
 setSectionVisible("discoverySection",!categoryPageActive&&!dealPage);
 setSectionVisible("trendSection",!categoryPageActive&&!dealPage);
