@@ -532,10 +532,12 @@ async function loadProducts(env) {
   const toSiteProduct = (item, source) => {
     const partnerUrl = findPartnerUrl(item);
 
-    // 필수 표시 정보와 실제 제휴 링크가 없는 상품만 해당 상품 단위로 제외합니다.
+    // Deeplink가 없어도 정상적인 쿠팡 상품은 표시합니다.
+    // 제휴 링크가 없다는 사실은 진단 통계로만 기록하고 상품을 탈락시키지 않습니다.
     if (!partnerUrl) {
       stats.missingPartnerUrl += 1;
-      return null;
+    } else {
+      stats.deeplinkMatched += 1;
     }
 
     const price = Number(item.productPrice);
@@ -548,8 +550,6 @@ async function loadProducts(env) {
       stats.invalidProduct += 1;
       return null;
     }
-
-    stats.deeplinkMatched += 1;
 
     const trendKeywords = Array.isArray(item.trendKeywords)
       ? [...new Set(item.trendKeywords.filter(Boolean))]
@@ -577,7 +577,7 @@ async function loadProducts(env) {
       trendKeywords,
       trendSource: item.trendSource || null,
       source,
-      url: partnerUrl
+      url: partnerUrl || productUrl
     };
   };
 
