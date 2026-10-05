@@ -161,6 +161,8 @@ async function loadProducts(env) {
     deeplinkRequested: 0,
     deeplinkReturned: 0,
     deeplinkMatched: 0,
+    missingPartnerUrl: 0,
+    invalidProduct: 0,
     final: 0
   };
 
@@ -359,15 +361,25 @@ async function loadProducts(env) {
     return match ? String(match[1]) : "";
   };
 
+  // Deeplink 요청 당시 상품과 URL을 함께 보존해 응답 매칭을 추적합니다.
+  const deeplinkRequests = [];
   const deeplinkRecords = [];
 
   const addDeeplinkRecords = (links) => {
-    for (const link of Array.isArray(links) ? links : []) {
+    const responseLinks = Array.isArray(links)
+      ? links
+      : Array.isArray(links?.data)
+        ? links.data
+        : [];
+
+    for (const link of responseLinks) {
       const originalUrl = String(link?.originalUrl || "").trim();
       const partnerUrl = String(link?.shortenUrl || link?.landingUrl || "").trim();
 
-      // 실제 제휴 URL이 없는 응답만 개별적으로 제외합니다.
-      if (!partnerUrl) continue;
+      // 실제 제휴 URL이 없는 응답은 해당 상품만 제외하고 원인을 집계합니다.
+      if (!partnerUrl) {
+        continue;
+      }
 
       deeplinkRecords.push({
         originalUrl,
@@ -379,23 +391,31 @@ async function loadProducts(env) {
     }
   };
 
-  const converted = [];
-
   for (let i = 0; i < allRaw.length; i += 50) {
     const batch = allRaw.slice(i, i + 50);
-    const urls = batch
-      .map((item) =>
-        item.productUrl || (
+    const requestRecords = batch
+      .map((item) => {
+        const deeplinkRequestUrl = item.productUrl || (
           item.productId
             ? `https://www.coupang.com/vp/products/${item.productId}`
             : ""
-        )
-      )
+        );
+
+        if (!deeplinkRequestUrl) return null;
+
+        return {
+          productId: String(item.productId || "").trim(),
+          sourceProductUrl: String(item.productUrl || "").trim(),
+          deeplinkRequestUrl
+        };
+      })
       .filter(Boolean);
 
-    if (!urls.length) continue;
+    if (!requestRecords.length) continue;
 
-    stats.deeplinkRequested += urls.length;
+    const urls = requestRecords.map((record) => record.deeplinkRequestUrl);
+    deeplinkRequests.push(...requestRecords);
+    stats.deeplinkRequested += requestRecords.length;
 
     try {
       const deeplink = await coupangRequest(
@@ -409,19 +429,23 @@ async function loadProducts(env) {
     } catch (error) {
       console.error("보고팡 딥링크 배치 변환 실패:", error.message);
 
-      // 배치 변환이 실패해도 개별 변환을 재시도해 전체 상품이 사라지지 않게 합니다.
-      for (const originalUrl of urls) {
+      // 배치 변환이 실패한 경우에만 개별 변환으로 재시도합니다.
+      for (const record of requestRecords) {
         try {
           const single = await coupangRequest(
             "POST",
             DEEPLINK_PATH,
             env,
-            { coupangUrls: [originalUrl] }
+            { coupangUrls: [record.deeplinkRequestUrl] }
           );
 
           addDeeplinkRecords(single.data);
         } catch (singleError) {
-          console.error("보고팡 개별 딥링크 변환 실패:", originalUrl, singleError.message);
+          console.error(
+            "보고팡 개별 딥링크 변환 실패:",
+            record.deeplinkRequestUrl,
+            singleError.message
+          );
         }
       }
     }
@@ -442,7 +466,23 @@ async function loadProducts(env) {
     }
   }
 
-  // 상품마다 productId → normalized URL → exact URL 순서로 제휴 링크를 찾습니다.
+  // Deeplink originalUrl이 달라져도 실제 요청 목록에서 같은 상품을 찾을 수 있게 합니다.
+  const requestedByProductId = new Map();
+  const requestedByNormalizedUrl = new Map();
+  const requestedByOriginalUrl = new Map();
+
+  for (const record of deeplinkRequests) {
+    if (record.productId) {
+      requestedByProductId.set(record.productId, record);
+    }
+    requestedByNormalizedUrl.set(
+      normalizeCoupangUrl(record.deeplinkRequestUrl),
+      record
+    );
+    requestedByOriginalUrl.set(record.deeplinkRequestUrl, record);
+  }
+
+  // 상품마다 productId → originalUrl의 productId → normalized URL → exact URL 순으로 연결합니다.
   const findPartnerUrl = (item) => {
     const productId = String(item.productId || "").trim();
     const productUrl = String(item.productUrl || "").trim();
@@ -450,8 +490,34 @@ async function loadProducts(env) {
       ? `https://www.coupang.com/vp/products/${productId}`
       : productUrl;
 
+    // 1순위: Deeplink 응답의 productId가 직접 일치하는 경우
+    if (productId && linkByProductId.has(productId)) {
+      return linkByProductId.get(productId);
+    }
+
+    // 2순위: 실제 요청 목록에서 상품을 찾은 뒤 그 요청 URL에 대한 Deeplink를 찾습니다.
+    const requested =
+      (productId && requestedByProductId.get(productId)) ||
+      requestedByNormalizedUrl.get(normalizeCoupangUrl(productUrl)) ||
+      requestedByNormalizedUrl.get(normalizeCoupangUrl(canonicalUrl)) ||
+      requestedByOriginalUrl.get(productUrl) ||
+      requestedByOriginalUrl.get(canonicalUrl);
+
+    if (requested) {
+      const requestedProductId = requested.productId;
+      if (requestedProductId && linkByProductId.has(requestedProductId)) {
+        return linkByProductId.get(requestedProductId);
+      }
+
+      const normalizedRequest = normalizeCoupangUrl(requested.deeplinkRequestUrl);
+      return (
+        linkByNormalizedUrl.get(normalizedRequest) ||
+        linkByOriginalUrl.get(requested.deeplinkRequestUrl) ||
+        ""
+      );
+    }
+
     return (
-      (productId && linkByProductId.get(productId)) ||
       linkByNormalizedUrl.get(normalizeCoupangUrl(productUrl)) ||
       linkByNormalizedUrl.get(normalizeCoupangUrl(canonicalUrl)) ||
       linkByOriginalUrl.get(productUrl) ||
@@ -465,13 +531,19 @@ async function loadProducts(env) {
     const partnerUrl = findPartnerUrl(item);
 
     // 필수 표시 정보와 실제 제휴 링크가 없는 상품만 해당 상품 단위로 제외합니다.
+    if (!partnerUrl) {
+      stats.missingPartnerUrl += 1;
+      return null;
+    }
+
+    const price = Number(item.productPrice);
     if (
-      !partnerUrl ||
       (!item.productId && !item.productUrl) ||
       !item.productName ||
-      item.productPrice == null ||
+      !Number.isFinite(price) ||
       !item.productImage
     ) {
+      stats.invalidProduct += 1;
       return null;
     }
 
@@ -486,7 +558,7 @@ async function loadProducts(env) {
     return {
       id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
-      price: item.productPrice,
+      price,
       originalPrice:
         item.originalPrice ??
         item.productOriginalPrice ??
@@ -522,17 +594,40 @@ async function loadProducts(env) {
   const products = [...specialDeals, ...trendingSearch, ...rocketProducts];
 
   stats.final = products.length;
-  console.log("보고팡 상품 수집 단계:", {
+  const collectionStats = {
     trends: stats.trends,
-    search: stats.search,
     searchKeywords: stats.searchKeywords,
+    searchProducts: stats.search,
     goldbox: stats.goldbox,
     combined: stats.combined,
-    deeplink: stats.deeplinkRequested,
+    deeplinkRequested: stats.deeplinkRequested,
     deeplinkReturned: stats.deeplinkReturned,
     deeplinkMatched: stats.deeplinkMatched,
+    missingPartnerUrl: stats.missingPartnerUrl,
+    invalidProduct: stats.invalidProduct,
     final: stats.final
-  });
+  };
+
+  console.log("보고팡 상품 수집 단계:", collectionStats);
+
+  // 어느 단계에서 상품이 사라졌는지 바로 확인할 수 있도록 0단계를 명시합니다.
+  for (const [stage, count] of Object.entries(collectionStats)) {
+    if (count === 0) {
+      console.warn(`[보고팡] ${stage}=0`);
+    }
+  }
+
+  if (stats.deeplinkRequested > 0 && stats.deeplinkReturned === 0) {
+    console.error("[보고팡] Deeplink 요청은 성공 대상이 있었지만 반환된 제휴 링크가 0개입니다.");
+  }
+
+  if (stats.deeplinkReturned > 0 && stats.deeplinkMatched === 0) {
+    console.error("[보고팡] Deeplink 응답은 존재하지만 상품과 제휴 링크 연결에 모두 실패했습니다.");
+  }
+
+  if (stats.final === 0) {
+    console.error("[보고팡] 최종 상품이 0개입니다.", collectionStats);
+  }
 
   if (!products.length) {
     throw new Error("쿠팡 API에서 사용할 수 있는 상품이 0개입니다.");
