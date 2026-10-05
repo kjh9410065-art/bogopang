@@ -159,7 +159,8 @@ async function loadProducts(env) {
     goldbox: 0,
     combined: 0,
     deeplinkRequested: 0,
-    deeplinkReturned: 0,
+    deeplinkResponseCount: 0,
+    deeplinkUsableCount: 0,
     deeplinkMatched: 0,
     missingPartnerUrl: 0,
     invalidProduct: 0,
@@ -374,6 +375,7 @@ async function loadProducts(env) {
 
     for (const link of responseLinks) {
       const originalUrl = String(link?.originalUrl || "").trim();
+      stats.deeplinkResponseCount += 1;
       const partnerUrl = String(link?.shortenUrl || link?.landingUrl || "").trim();
 
       // 실제 제휴 URL이 없는 응답은 해당 상품만 제외하고 원인을 집계합니다.
@@ -381,13 +383,13 @@ async function loadProducts(env) {
         continue;
       }
 
+      stats.deeplinkUsableCount += 1;
       deeplinkRecords.push({
         originalUrl,
         partnerUrl,
         productId: extractProductId(originalUrl),
         normalizedUrl: normalizeCoupangUrl(originalUrl)
       });
-      stats.deeplinkReturned += 1;
     }
   };
 
@@ -601,7 +603,8 @@ async function loadProducts(env) {
     goldbox: stats.goldbox,
     combined: stats.combined,
     deeplinkRequested: stats.deeplinkRequested,
-    deeplinkReturned: stats.deeplinkReturned,
+    deeplinkResponseCount: stats.deeplinkResponseCount,
+    deeplinkUsableCount: stats.deeplinkUsableCount,
     deeplinkMatched: stats.deeplinkMatched,
     missingPartnerUrl: stats.missingPartnerUrl,
     invalidProduct: stats.invalidProduct,
@@ -617,11 +620,15 @@ async function loadProducts(env) {
     }
   }
 
-  if (stats.deeplinkRequested > 0 && stats.deeplinkReturned === 0) {
-    console.error("[보고팡] Deeplink 요청은 성공 대상이 있었지만 반환된 제휴 링크가 0개입니다.");
+  if (stats.deeplinkRequested > 0 && stats.deeplinkResponseCount === 0) {
+    console.error("[보고팡] Deeplink 요청은 있었지만 응답 레코드가 0개입니다.");
   }
 
-  if (stats.deeplinkReturned > 0 && stats.deeplinkMatched === 0) {
+  if (stats.deeplinkResponseCount > 0 && stats.deeplinkUsableCount === 0) {
+    console.error("[보고팡] Deeplink 응답은 있지만 사용 가능한 제휴 URL이 0개입니다.");
+  }
+
+  if (stats.deeplinkUsableCount > 0 && stats.deeplinkMatched === 0) {
     console.error("[보고팡] Deeplink 응답은 존재하지만 상품과 제휴 링크 연결에 모두 실패했습니다.");
   }
 
