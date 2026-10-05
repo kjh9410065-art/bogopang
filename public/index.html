@@ -27,7 +27,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .logo{font-size:27px;font-weight:900;letter-spacing:-1.5px}.logo b{color:var(--accent)}
 .search{width:min(540px,52vw);position:relative}.search input{width:100%;padding:12px 38px 12px 16px;border:1px solid #dddfe5;border-radius:14px;background:#fafafa;outline:0}
 .search input:focus{border-color:#b9bbc2;background:#fff}
-.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}
+.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span,.hero-points button{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444;cursor:pointer}.hero-points button.on{background:#171717;color:#fff;border-color:#171717}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}
 .preview{margin:4px 0 16px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}
 .quick,.chips,.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none}.quick::-webkit-scrollbar,.chips::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
 .quick{padding:2px 0 18px}.category-pages{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding:0 0 18px}.category-pages::-webkit-scrollbar{display:none}.category-page{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}.category-page.on{background:#171717;color:#fff;border-color:#171717}.pill,.chip,.tab,.sort{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}
@@ -54,7 +54,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <body>
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="hero-points" aria-label="보고팡에서 할 수 있는 일"><span>🔥 오늘의 특가</span><span>✨ 오늘의 발견</span><span>🔎 오늘의 검색</span><span>🚀 로켓배송</span></div><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -123,7 +123,19 @@ rocketProducts:[
 {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
 {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
-let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체",sortMode="recommended",searchKeyword="",searchTrendOnly=false,searchPrice="전체",searchCategory="전체",searchSort="recommended",activeCategoryPage="전체";
+const PAGE_ROUTES={home:"/",deals:"/deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search"};
+function getPageFromPath(){
+const path=window.location.pathname.replace(/\/$/,"")||"/";
+if(path==="/deals")return "deals";
+if(path==="/discovery")return "discovery";
+if(path==="/trends")return "trends";
+if(path==="/rocket")return "rocket";
+if(path==="/search")return "search";
+return "home";
+}
+let activePage=getPageFromPath();
+let activeTab="specialDeals",selectedCategory="전체",selectedPrice="전체",sortMode="recommended",searchKeyword=new URLSearchParams(window.location.search).get("q")||"",searchTrendOnly=false,searchPrice="전체",searchCategory="전체",searchSort="recommended",activeCategoryPage=new URLSearchParams(window.location.search).get("category")||"전체";
+if(window.location.pathname==="/")activePage=searchKeyword?"search":activeCategoryPage!=="전체"?"category":"home";
 const homeLimits={deals:6,discovery:6,rocket:6};
 const expandedSections={deals:false,rocket:false};
 
@@ -170,10 +182,48 @@ el.innerHTML=CATEGORY_PAGES.map(([name])=>'<button class="category-page '+(activ
 document.querySelectorAll("[data-category-page]").forEach(button=>button.onclick=()=>{
 activeCategoryPage=button.dataset.categoryPage;
 selectedCategory="전체";
-if(activeCategoryPage==="오늘의 특가")activeTab="specialDeals";
+if(activeCategoryPage==="오늘의 특가"){
+navigateToPage("deals");
+return;
+}
+activePage="category";
+history.pushState({page:"category",category:activeCategoryPage},"","/?category="+encodeURIComponent(activeCategoryPage));
 draw();
 window.scrollTo({top:0,behavior:"smooth"});
 });
+}
+
+// 주요 상품 페이지의 URL을 관리합니다.
+function navigateToPage(page,options={}){
+const route=PAGE_ROUTES[page]||"/";
+const query=options.query?("?q="+encodeURIComponent(options.query)):"";
+history.pushState({page}, "", route+query);
+activePage=page;
+if(page!=="search"){
+searchKeyword="";
+searchTrendOnly=false;
+document.getElementById("q").value="";
+}
+if(page==="deals")activeTab="specialDeals";
+if(page==="trends")activeTab="trendingSearch";
+if(page==="rocket")activeTab="rocketProducts";
+if(page==="discovery")activeTab="trendingSearch";
+draw();
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// 브라우저 뒤로가기와 앞으로가기를 지원합니다.
+window.addEventListener("popstate",()=>{
+activePage=getPageFromPath();
+searchKeyword=new URLSearchParams(window.location.search).get("q")||"";
+document.getElementById("q").value=searchKeyword;
+searchTrendOnly=false;
+draw();
+});
+
+// 상단 주요 페이지 메뉴의 활성 상태를 갱신합니다.
+function drawMainPages(){
+document.querySelectorAll("[data-page]").forEach(button=>button.classList.toggle("on",button.dataset.page===activePage));
 }
 
 // 탭의 제목과 설명을 정의합니다.
@@ -324,12 +374,11 @@ const section=document.getElementById("trendSection");
 setSectionVisible("trendSection",keywords.length>0&&!searchKeyword);
 document.getElementById("keywords").innerHTML=keywords.map(k=>'<button class="keyword-chip" data-keyword="'+escapeHtml(k)+'">'+escapeHtml(k)+"</button>").join("");
 document.querySelectorAll("[data-keyword]").forEach(b=>b.onclick=()=>{
+navigateToPage("trends");
 searchKeyword=b.dataset.keyword;
 searchTrendOnly=true;
 document.getElementById("q").value=searchKeyword;
-selectedCategory="전체";
 draw();
-document.getElementById("searchSection").scrollIntoView({behavior:"smooth"})
 })
 }
 
@@ -353,82 +402,135 @@ return(searchTrendOnly?(q&&trendMatch):textMatch)
 
 
 // 검색 결과 전용 화면을 그립니다.
-function drawSearch(){const section=document.getElementById("searchSection");const reset=document.getElementById("searchReset");if(!searchKeyword){section.classList.add("hidden");document.querySelector(".hero").classList.remove("hidden");document.getElementById("quickPrices").classList.remove("hidden");document.getElementById("categoryPages").classList.remove("hidden");document.getElementById("tabs").classList.remove("hidden");reset.classList.remove("show");return}section.classList.remove("hidden");document.querySelector(".hero").classList.add("hidden");document.getElementById("quickPrices").classList.add("hidden");document.getElementById("categoryPages").classList.add("hidden");document.getElementById("tabs").classList.add("hidden");reset.classList.add("show");const all=getSearchAll();const results=sortSearchItems(filterSearchItems(all));document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";document.getElementById("searchDescription").textContent=searchTrendOnly?"오늘의 관심 키워드와 실제 연결된 상품입니다.":"상품명과 검색 키워드에서 찾은 결과입니다.";document.getElementById("searchCount").textContent=results.length?results.length+"개 상품":"";drawSearchTools(all);if(results.length)drawGrid("searchGrid",results);else document.getElementById("searchGrid").innerHTML='<div class="empty"><strong>검색 결과가 없습니다.</strong>다른 검색어로 다시 찾아보세요.<button class="more-btn" id="emptySearchReset" type="button">전체 상품 보기</button></div>';const emptyReset=document.getElementById("emptySearchReset");if(emptyReset)emptyReset.onclick=()=>document.getElementById("searchReset").click()}
+function drawSearch(){const section=document.getElementById("searchSection");const reset=document.getElementById("searchReset");if(activePage!=="search"||!searchKeyword){section.classList.add("hidden");reset.classList.remove("show");return}section.classList.remove("hidden");document.querySelector(".hero").classList.add("hidden");document.getElementById("quickPrices").classList.add("hidden");document.getElementById("categoryPages").classList.add("hidden");document.getElementById("tabs").classList.add("hidden");reset.classList.add("show");const all=getSearchAll();const results=sortSearchItems(filterSearchItems(all));document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";document.getElementById("searchDescription").textContent=searchTrendOnly?"오늘의 관심 키워드와 실제 연결된 상품입니다.":"상품명과 검색 키워드에서 찾은 결과입니다.";document.getElementById("searchCount").textContent=results.length?results.length+"개 상품":"";drawSearchTools(all);if(results.length)drawGrid("searchGrid",results);else document.getElementById("searchGrid").innerHTML='<div class="empty"><strong>검색 결과가 없습니다.</strong>다른 검색어로 다시 찾아보세요.<button class="more-btn" id="emptySearchReset" type="button">전체 상품 보기</button></div>';const emptyReset=document.getElementById("emptySearchReset");if(emptyReset)emptyReset.onclick=()=>document.getElementById("searchReset").click()}
 
 // 로켓배송은 위에서 이미 노출된 상품을 우선 제외합니다.
 function drawRocket(){const raw=uniqueProducts(productData.rocketProducts);const seen=new Set([...uniqueProducts(productData.specialDeals),...getDiscoveryItems()].map(i=>String(i.id||i.url||i.name)));let items=filterItems(raw).filter(i=>!seen.has(String(i.id||i.url||i.name)));if(items.length<2)items=filterItems(raw);setSectionVisible("rocketSection",raw.length>0&&!searchKeyword);document.getElementById("rocketCount").textContent=items.length?items.length+"개 상품":"";if(!searchKeyword){const visible=expandedSections.rocket?items:items.slice(0,6);drawGrid("rocketGrid",visible);drawMoreButton("rocketMore",items,6,expandedSections.rocket,"로켓배송")}}
 
-// 선택한 카테고리 페이지의 상품을 그립니다.
+// 카테고리 페이지와 오늘의 검색 페이지의 상품 목록을 그립니다.
 function drawBrowse(){
 const browse=document.getElementById("browseSection");
-if(searchKeyword||activeCategoryPage==="오늘의 특가"){browse.classList.add("hidden");return}
+if(searchKeyword||activePage==="home"||activePage==="deals"||activePage==="discovery"||activePage==="rocket"){
+browse.classList.add("hidden");
+return;
+}
 browse.classList.remove("hidden");
 
-const all=uniqueProducts([
-...productData.specialDeals,
-...productData.trendingSearch,
-...productData.popularProducts,
-...productData.rocketProducts
-]);
-
+let all=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.popularProducts,...productData.rocketProducts]);
 let filtered=all;
-if(activeCategoryPage!=="전체"){
+
+if(activePage==="trends"){
+all=uniqueProducts(productData.trendingSearch);
+filtered=all;
+}else if(activeCategoryPage!=="전체"){
 filtered=all.filter(item=>getFixedCategory(item)===activeCategoryPage);
 }
+
 filtered=filtered.filter(item=>matchesPrice(item.price));
 filtered=sortItems(filtered);
 
+if(activePage==="trends"){
+document.getElementById("browseHeading").textContent="오늘의 검색 상품";
+document.getElementById("heading").textContent="🔎 오늘의 검색 상품";
+document.getElementById("description").textContent="오늘의 검색 키워드와 연결된 실제 쿠팡 상품입니다.";
+}else{
 const meta=CATEGORY_PAGES.find(([name])=>name===activeCategoryPage)||["전체","전체 상품을 한눈에 확인하세요."];
+document.getElementById("browseHeading").textContent=activeCategoryPage==="전체"?"상품 탐색":activeCategoryPage+" 상품";
 document.getElementById("heading").textContent=meta[0];
 document.getElementById("description").textContent=meta[1];
+}
 document.getElementById("count").textContent=filtered.length?filtered.length+"개 상품":"";
-document.getElementById("browseHeading").textContent=activeCategoryPage==="전체"?"상품 탐색":activeCategoryPage+" 상품";
 drawCategories(filtered);
 drawSorts();
-drawGrid("grid",filtered,"현재 해당 카테고리 상품이 없습니다.");
+drawGrid("grid",filtered,activePage==="trends"?"선택한 검색 키워드와 연결된 상품이 없습니다.":"현재 해당 카테고리 상품이 없습니다.");
 }
 
-// 현재 상태를 다시 그립니다.
+// 현재 페이지에 필요한 영역만 표시합니다.
 function draw(){
 ensureActiveTab();
+drawMainPages();
 drawQuickPrices();
 drawCategoryPages();
 drawTabs();
 drawSearch();
 
-const categoryPageActive=!searchKeyword&&activeCategoryPage!=="전체";
-const dealPage=activeCategoryPage==="오늘의 특가";
-document.getElementById("tabs").classList.toggle("hidden",categoryPageActive||dealPage);
-setSectionVisible("dealSection",!categoryPageActive&&!dealPage);
-setSectionVisible("discoverySection",!categoryPageActive&&!dealPage);
-setSectionVisible("trendSection",!categoryPageActive&&!dealPage);
-setSectionVisible("rocketSection",!categoryPageActive&&!dealPage);
+const isSearch=activePage==="search"&&Boolean(searchKeyword);
+const isHome=activePage==="home";
+const isDeals=activePage==="deals";
+const isDiscovery=activePage==="discovery";
+const isTrends=activePage==="trends";
+const isRocket=activePage==="rocket";
+const isCategory=!isHome&&!isDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch;
 
-if(dealPage){
-document.getElementById("dealSection").classList.remove("hidden");
-const raw=filterItems(productData.specialDeals);
+document.querySelector(".hero").classList.toggle("hidden",!isHome&&!isSearch);
+document.getElementById("quickPrices").classList.toggle("hidden",isSearch);
+document.getElementById("categoryPages").classList.toggle("hidden",isSearch||isDeals||isDiscovery||isTrends||isRocket);
+document.getElementById("tabs").classList.add("hidden");
+
+setSectionVisible("dealSection",isDeals);
+setSectionVisible("discoverySection",isDiscovery);
+setSectionVisible("trendSection",isTrends);
+setSectionVisible("rocketSection",isRocket);
+setSectionVisible("browseSection",isCategory||isTrends);
+setSectionVisible("searchSection",isSearch);
+
+if(isDeals){
+const raw=sortItems(filterItems(productData.specialDeals));
 document.getElementById("dealCount").textContent=raw.length?raw.length+"개 상품":"";
-drawGrid("dealGrid",raw,"현재 해당 카테고리 상품이 없습니다.");
+drawGrid("dealGrid",raw,"현재 오늘의 특가 상품이 없습니다.");
 document.getElementById("dealMore").innerHTML="";
 }
 
-if(!categoryPageActive&&!dealPage){
-drawDeals();
-drawDiscovery();
-drawKeywords();
-drawRocket();
+if(isDiscovery){
+const items=getDiscoveryItems().slice(0,6);
+drawGrid("discovery",items,"현재 발견할 상품이 없습니다.",{discovery:true});
+document.getElementById("discoveryMore").innerHTML="";
 }
 
+if(isTrends){
+drawKeywords();
 drawBrowse();
+}
+
+if(isRocket){
+const raw=sortItems(filterItems(productData.rocketProducts));
+document.getElementById("rocketCount").textContent=raw.length?raw.length+"개 상품":"";
+drawGrid("rocketGrid",raw,"현재 로켓배송 상품이 없습니다.");
+document.getElementById("rocketMore").innerHTML="";
+}
+
+if(isCategory){
+drawBrowse();
+}
+
+// 검색 화면에서는 검색 결과만 표시합니다.
+if(isSearch){
+const all=getSearchAll();
+const results=sortSearchItems(filterSearchItems(all));
+document.getElementById("searchHeading").textContent="'"+searchKeyword+"' 검색 결과";
+document.getElementById("searchDescription").textContent=searchTrendOnly?"오늘의 관심 키워드와 실제 연결된 상품입니다.":"상품명과 검색 키워드에서 찾은 결과입니다.";
+document.getElementById("searchCount").textContent=results.length?results.length+"개 상품":"";
+drawSearchTools(all);
+if(results.length)drawGrid("searchGrid",results);
+else document.getElementById("searchGrid").innerHTML='<div class="empty"><strong>검색 결과가 없습니다.</strong>다른 검색어로 다시 찾아보세요.<button class="more-btn" id="emptySearchReset" type="button">전체 상품 보기</button></div>';
+const emptyReset=document.getElementById("emptySearchReset");
+if(emptyReset)emptyReset.onclick=()=>navigateToPage("home");
+}
 }
 
 // 쿠팡 상품 API에서 목적별 상품 데이터를 가져옵니다.
 async function loadProducts(){const grid=document.getElementById("grid");grid.innerHTML='<div class="empty">상품을 불러오는 중...</div>';try{const response=await fetch("/api/products"),data=await response.json();if(!response.ok||!data||Array.isArray(data))throw new Error(data?.error||"상품 정보를 불러오지 못했습니다.");productData={specialDeals:Array.isArray(data.specialDeals)?data.specialDeals:[],trendingSearch:Array.isArray(data.trendingSearch)?data.trendingSearch:[],popularProducts:Array.isArray(data.popularProducts)?data.popularProducts:[],trendKeywords:Array.isArray(data.trendKeywords)?data.trendKeywords:[],rocketProducts:Array.isArray(data.rocketProducts)?data.rocketProducts:[]};const hasProducts=Object.values(productData).some(list=>list.length>0);if(!hasProducts&&PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false}draw()}catch(error){if(PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false;draw();console.warn("미리보기 데이터 사용:",error.message);return}grid.innerHTML='<div class="empty">'+escapeHtml(error.message||"상품 정보를 불러오지 못했습니다.")+"</div>";console.error(error)}}
 
 // 검색어가 바뀌면 즉시 상품을 필터링하고, 비우면 일반 화면으로 돌아갑니다.
-document.getElementById("q").oninput=()=>{searchKeyword=document.getElementById("q").value.trim();searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";draw()};
-document.getElementById("searchReset").onclick=()=>{document.getElementById("q").value="";searchKeyword="";searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";draw();document.getElementById("q").focus()};
+document.getElementById("q").oninput=()=>{searchKeyword=document.getElementById("q").value.trim();searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";if(searchKeyword){history.replaceState({page:"search"},"",PAGE_ROUTES.search+"?q="+encodeURIComponent(searchKeyword));activePage="search"}else{history.replaceState({page:"home"},"",PAGE_ROUTES.home);activePage="home"}draw()};
+document.getElementById("searchReset").onclick=()=>{document.getElementById("q").value="";searchKeyword="";searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";history.pushState({page:"home"},"",PAGE_ROUTES.home);activePage="home";draw();document.getElementById("q").focus()};
 document.getElementById("q").addEventListener("keydown",event=>{if(event.key==="Escape"){document.getElementById("searchReset").click()}});
+
+// 상단 주요 페이지 메뉴를 연결합니다.
+document.querySelectorAll("[data-page]").forEach(button=>button.onclick=()=>navigateToPage(button.dataset.page));
+
+// 로고 클릭은 홈으로 이동합니다.
+document.querySelector(".logo").onclick=event=>{event.preventDefault();navigateToPage("home")};
 
 // 초기 화면을 상품 API와 함께 로드합니다.
 loadProducts();
