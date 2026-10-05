@@ -499,7 +499,8 @@ const isTrends=activePage==="trends";
 const isRocket=activePage==="rocket";
 const isCategory=!isHome&&!isDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch;
 
-document.querySelector(".hero").classList.toggle("hidden",!isHome&&!isSearch);
+// 검색 화면에서만 상단 히어로/주요 탭을 숨기고, 특가·발견·검색·로켓 페이지에서는 탭을 계속 보여줍니다.
+document.querySelector(".hero").classList.toggle("hidden",isSearch);
 document.getElementById("quickPrices").classList.toggle("hidden",isSearch);
 document.getElementById("categoryPages").classList.toggle("hidden",isSearch||isDeals||isDiscovery||isTrends||isRocket);
 document.getElementById("tabs").classList.add("hidden");
