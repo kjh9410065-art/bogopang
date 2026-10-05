@@ -531,6 +531,7 @@ async function loadProducts(env) {
   // 쿠팡 원본 데이터를 보고팡 공통 상품 구조로 변환합니다.
   const toSiteProduct = (item, source) => {
     const partnerUrl = findPartnerUrl(item);
+    const productUrl = String(item.productUrl || "").trim();
 
     // Deeplink가 없어도 정상적인 쿠팡 상품은 표시합니다.
     // 제휴 링크가 없다는 사실은 진단 통계로만 기록하고 상품을 탈락시키지 않습니다.
