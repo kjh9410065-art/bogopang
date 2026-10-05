@@ -66,6 +66,12 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <!-- 실제 상품이 있는 경우에만 주요 상품 탭을 표시합니다. -->
 <nav id="tabs" class="tabs" aria-label="상품 종류"></nav>
 
+<!-- 첫 화면에서는 여러 페이지로 들어가기 전에 실제 상품을 바로 볼 수 있도록 추천 상품을 보여줍니다. -->
+<section id="homeSection" class="section">
+<div class="section-head"><div><h2>🛍️ 오늘의 추천</h2><p>오늘 확인할 만한 상품을 먼저 골라봤어요.</p></div><span id="homeCount" class="count"></span></div>
+<section id="homeGrid" class="grid" aria-live="polite"></section>
+</section>
+
 <section id="searchSection" class="section search-results hidden">
 <div class="section-head"><div><h2 id="searchHeading">🔎 검색 결과</h2><p id="searchDescription">상품명과 검색 키워드에서 찾은 결과입니다.</p></div><span id="searchCount" class="count"></span></div><div id="searchTools" class="search-tools"></div>
 <section id="searchGrid" class="grid" aria-live="polite"></section>
@@ -360,6 +366,22 @@ return selected
 function drawDiscovery(){const items=getDiscoveryItems();setSectionVisible("discoverySection",items.length>0&&!searchKeyword);if(!searchKeyword)drawGrid("discovery",items,"현재 발견할 상품이 없습니다.",{discovery:true})}
 
 // 오늘의 특가는 검색 모드가 아닐 때 첫 번째 상품 영역으로 보여줍니다.
+// 첫 화면에 표시할 추천 상품을 실제 API 상품에서 구성합니다.
+function getHomeItems(){
+const discovery=getDiscoveryItems();
+const fallback=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.rocketProducts]);
+return uniqueProducts([...discovery,...fallback]).slice(0,6);
+}
+
+// 첫 화면에는 실제 쿠팡 API에서 가져온 상품을 바로 보여줍니다.
+function drawHome(){
+const items=getHomeItems();
+setSectionVisible("homeSection",activePage==="home"&&!searchKeyword);
+document.getElementById("homeCount").textContent=items.length?items.length+"개 상품":"";
+drawGrid("homeGrid",items,"오늘 보여드릴 상품을 준비하고 있습니다.",{discovery:true});
+}
+
+// 오늘의 특가는 검색 모드가 아닐 때 첫 번째 상품 영역으로 보여줍니다.
 function drawDeals(){const raw=filterItems(productData.specialDeals);setSectionVisible("dealSection",raw.length>0&&!searchKeyword);document.getElementById("dealCount").textContent=raw.length?raw.length+"개 상품":"";if(!searchKeyword){const items=expandedSections.deals?raw:raw.slice(0,6);drawGrid("dealGrid",items);drawMoreButton("dealMore",raw,6,expandedSections.deals,"오늘의 특가")}}
 
 // Google Trends 키워드를 상품 키워드에서 추려 표시합니다.
@@ -475,12 +497,17 @@ document.getElementById("quickPrices").classList.toggle("hidden",isSearch);
 document.getElementById("categoryPages").classList.toggle("hidden",isSearch||isDeals||isDiscovery||isTrends||isRocket);
 document.getElementById("tabs").classList.add("hidden");
 
+setSectionVisible("homeSection",isHome);
 setSectionVisible("dealSection",isDeals);
 setSectionVisible("discoverySection",isDiscovery);
 setSectionVisible("trendSection",isTrends);
 setSectionVisible("rocketSection",isRocket);
 setSectionVisible("browseSection",isCategory||isTrends);
 setSectionVisible("searchSection",isSearch);
+
+if(isHome){
+drawHome();
+}
 
 if(isDeals){
 const raw=sortItems(filterItems(productData.specialDeals));
