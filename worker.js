@@ -333,7 +333,16 @@ async function loadProducts(env) {
       : item.productUrl;
     const partnerUrl = linkMap.get(canonicalUrl) || linkMap.get(item.productUrl);
 
-    if (!partnerUrl) return null;
+    // 필수 표시 정보와 정상적인 제휴 링크가 없는 상품은 최종 데이터에서 제외합니다.
+    if (
+      !partnerUrl ||
+      !item.productId && !item.productUrl ||
+      !item.productName ||
+      item.productPrice == null ||
+      !item.productImage
+    ) {
+      return null;
+    }
 
     const trendKeywords = Array.isArray(item.trendKeywords)
       ? [...new Set(item.trendKeywords.filter(Boolean))]
