@@ -210,6 +210,13 @@ searchKeyword="";
 searchTrendOnly=false;
 document.getElementById("q").value="";
 }
+// 독립 페이지로 이동할 때 홈 화면에서 사용한 숨은 필터 상태가 영향을 주지 않도록 초기화합니다.
+if(page==="deals"||page==="discovery"||page==="trends"||page==="rocket"){
+selectedCategory="전체";
+selectedPrice="전체";
+sortMode="recommended";
+activeCategoryPage="전체";
+}
 if(page==="deals")activeTab="specialDeals";
 if(page==="trends")activeTab="trendingSearch";
 if(page==="rocket")activeTab="rocketProducts";
