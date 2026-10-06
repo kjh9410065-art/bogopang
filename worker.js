@@ -15,6 +15,10 @@ const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
 const FALLBACK_SEARCH_KEYWORDS = ["생활용품", "주방용품", "식품", "가전", "디지털"];
 const CACHE_URL = "https://bogopang.tcflick.com/api/products";
 
+// 쿠팡 상품은 가격과 특가 상태가 변할 수 있으므로 하루 1회보다 자주 갱신합니다.
+// 6시간 간격으로 갱신해 최신성과 API 호출량 사이의 균형을 유지합니다.
+const REFRESH_INTERVAL_SECONDS = 6 * 60 * 60;
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
