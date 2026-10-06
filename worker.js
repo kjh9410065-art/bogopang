@@ -569,21 +569,32 @@ async function loadProducts(env) {
       item.listPrice
     ];
     const originalPrice = originalPriceCandidates
-      .map((value) => Number(value))
-      .find((value) => Number.isFinite(value) && value > 0) ?? null;
+      .map((value) => {
+        const normalized = Number(String(value ?? "").replace(/,/g, "").replace(/%$/, ""));
+        return Number.isFinite(normalized) && normalized > 0 ? normalized : null;
+      })
+      .find((value) => value != null) ?? null;
 
-    // 쿠팡 API의 할인율을 우선 사용하되, 없거나 0이면 정상가와 판매가로 계산합니다.
-    const apiDiscountRate = Number(item.discountRate ?? item.discountRatePercent);
+    // 쿠팡 API 할인율은 정상가가 없어도 유효하면 그대로 사용할 수 있습니다.
+    const apiDiscountRate = Number(
+      String(item.discountRate ?? item.discountRatePercent ?? "")
+        .replace(/,/g, "")
+        .replace(/%$/, "")
+    );
     const calculatedDiscountRate =
       originalPrice != null && originalPrice > price
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
         : null;
+
+    // API 할인율과 실제 가격 계산값이 크게 다르면 실제 가격을 우선합니다.
+    // 15%p 이내의 차이는 쿠팡 API 값을 유지하고, 그보다 큰 차이는 가격 기준값을 사용합니다.
     const discountRate =
-      originalPrice != null && originalPrice > price
-        ? Number.isFinite(apiDiscountRate) && apiDiscountRate > 0
-          ? Math.round(apiDiscountRate)
-          : calculatedDiscountRate
-        : null;
+      Number.isFinite(apiDiscountRate) && apiDiscountRate > 0
+        ? calculatedDiscountRate != null &&
+          Math.abs(apiDiscountRate - calculatedDiscountRate) > 15
+          ? calculatedDiscountRate
+          : Math.round(apiDiscountRate)
+        : calculatedDiscountRate;
 
     return {
       id: String(item.productId || item.productUrl || item.productName),
