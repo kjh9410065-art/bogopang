@@ -338,12 +338,18 @@ function drawGrid(containerId,items,emptyText="현재 조건에 맞는 상품이
 function drawMoreButton(containerId,allItems,visibleCount,expanded,label){const el=document.getElementById(containerId);if(!el)return;const extra=allItems.length>visibleCount;el.innerHTML=extra?'<button class="more-btn" data-more="'+containerId+'">'+(expanded?"접기":"더 많은 상품 보기")+"</button>":"";const btn=el.querySelector("[data-more]");if(btn)btn.onclick=()=>{if(containerId==="dealMore")expandedSections.deals=!expandedSections.deals;else if(containerId==="rocketMore")expandedSections.rocket=!expandedSections.rocket;draw()}}
 
 // 오늘의 발견은 실제 API 상품 중 조건에 맞는 상품을 카드로 보여줍니다.
-function getDiscoveryItems(){
-const all=uniqueProducts([...productData.trendingSearch,...productData.rocketProducts]);
-const specialIds=new Set(uniqueProducts(productData.specialDeals).map(i=>String(i.id||i.url||i.name)));
-const candidates=all.filter(i=>!specialIds.has(String(i.id||i.url||i.name)));
+function getProductKey(item){
+return String(item.id||item.url||item.name||"").trim();
+}
 
-const keyOf=item=>String(item.id||item.url||item.name);
+// 페이지 간 상품 중복을 줄이기 위한 후보 목록입니다.
+// productId가 우선이며, 기존 정규화 데이터에서는 id에 productId가 들어옵니다.
+function getDiscoveryItems(excludedKeys=new Set()){
+const all=uniqueProducts([...productData.trendingSearch,...productData.rocketProducts]);
+const specialIds=new Set(uniqueProducts(productData.specialDeals).map(getProductKey));
+const candidates=all.filter(i=>!specialIds.has(getProductKey(i))&&!excludedKeys.has(getProductKey(i)));
+
+const keyOf=item=>getProductKey(item);
 const categoryOf=item=>String(item.category||"기타").trim()||"기타";
 const hasTrend=item=>Boolean((Array.isArray(item.trendKeywords)&&item.trendKeywords.length)||item.keyword);
 const hasUsefulPrice=item=>{const price=parsePrice(item.price);return price!=null&&price<=30000};
@@ -543,7 +549,17 @@ drawBrowse();
 }
 
 if(isRocket){
-const raw=sortItems(filterItems(productData.rocketProducts));
+const homeKeys=new Set(getHomeItems().map(getProductKey));
+const discoveryKeys=new Set(getDiscoveryItems().map(getProductKey));
+const excludedKeys=new Set([...homeKeys,...discoveryKeys]);
+const rawAll=sortItems(filterItems(productData.rocketProducts));
+let raw=rawAll.filter(item=>!excludedKeys.has(getProductKey(item)));
+
+// 중복 제거로 상품 수가 부족하면 실제 로켓배송 상품을 추가해 최소 4개를 확보합니다.
+if(raw.length<4){
+  const fallback=rawAll.filter(item=>excludedKeys.has(getProductKey(item)));
+  raw=[...raw,...fallback.slice(0,4-raw.length)];
+}
 document.getElementById("rocketCount").textContent=raw.length?raw.length+"개 상품":"";
 drawGrid("rocketGrid",raw,"현재 로켓배송 상품이 없습니다.");
 document.getElementById("rocketMore").innerHTML="";
