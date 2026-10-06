@@ -310,13 +310,16 @@ return labels.slice(0,2)
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
 function cardHtml(item,options={}){
 const price=parsePrice(item.price),original=parsePrice(item.originalPrice);
-const apiRate=Number(item.discountRate);
+const apiRate=Number(String(item.discountRate??"").replace(/,/g,"").replace(/%$/,""));
 const calculatedRate=original!=null&&price!=null&&original>price
   ? Math.round(((original-price)/original)*100)
   : null;
-const rate=original!=null&&price!=null&&original>price
-  ? (Number.isFinite(apiRate)&&apiRate>0?Math.round(apiRate):calculatedRate)
-  : null;
+
+// Worker에서 정규화한 할인율을 우선 사용하고, 기존 캐시 데이터에는 동일한 계산식으로 fallback합니다.
+// API 할인율과 계산값이 15%p를 초과해 차이나면 실제 가격 기준 계산값을 우선합니다.
+const rate=Number.isFinite(apiRate)&&apiRate>0
+  ? (calculatedRate!=null&&Math.abs(apiRate-calculatedRate)>15?calculatedRate:Math.round(apiRate))
+  : calculatedRate;
 const discount=rate!=null&&rate>0?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";
 const old=original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";
 const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
@@ -324,7 +327,7 @@ const reasons=getReasonLabels(item,Boolean(options.discovery));
 const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(Boolean):[];
 const keyword=trendKeywords[0]||item.keyword;
 const meta=(keyword||item.rocket)?'<div class="card-meta">'+(keyword?'<span class="meta-badge">관심 키워드: '+escapeHtml(keyword)+'</span>':"")+(item.rocket?'<span class="meta-badge rocket">🚀 로켓배송</span>':"")+'</div>':"";
-const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"<div class=\"reason-row\"></div>";
+const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"";
 return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
 }
 
