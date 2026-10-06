@@ -10,7 +10,7 @@
 <g filter="url(#shadow)">
 <text x="70" y="205" font-family="Arial,'Malgun Gothic',sans-serif" font-size="126" font-weight="900" fill="#14203b">보고<tspan fill="#ffd21f">팡</tspan></text>
 <text x="78" y="295" font-family="Arial,'Malgun Gothic',sans-serif" font-size="58" font-weight="900" fill="#fff">오늘 뭐 살까?</text>
-<text x="80" y="355" font-family="Arial,'Malgun Gothic',sans-serif" font-size="31" font-weight="700" fill="#fff">지금 핫한 상품을 한눈에!</text>
+<text x="80" y="355" font-family="Arial,'Malgun Gothic',sans-serif" font-size="31" font-weight="700" fill="#fff">지금 핫한 쿠팡 상품을 한눈에!</text>
 </g>
 <g transform="translate(690 155)" filter="url(#shadow)">
 <rect x="90" y="105" width="330" height="190" rx="34" fill="#fff" stroke="#14203b" stroke-width="12"/>
