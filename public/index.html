@@ -538,7 +538,8 @@ document.getElementById("dealMore").innerHTML="";
 }
 
 if(isDiscovery){
-const items=getDiscoveryItems().slice(0,6);
+const homeKeys=new Set(getHomeItems().map(getProductKey));
+const items=getDiscoveryItems(homeKeys).slice(0,6);
 drawGrid("discovery",items,"현재 발견할 상품이 없습니다.",{discovery:true});
 document.getElementById("discoveryMore").innerHTML="";
 }
@@ -550,7 +551,7 @@ drawBrowse();
 
 if(isRocket){
 const homeKeys=new Set(getHomeItems().map(getProductKey));
-const discoveryKeys=new Set(getDiscoveryItems().map(getProductKey));
+const discoveryKeys=new Set(getDiscoveryItems(homeKeys).map(getProductKey));
 const excludedKeys=new Set([...homeKeys,...discoveryKeys]);
 const rawAll=sortItems(filterItems(productData.rocketProducts));
 let raw=rawAll.filter(item=>!excludedKeys.has(getProductKey(item)));
