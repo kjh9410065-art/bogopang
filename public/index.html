@@ -40,7 +40,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .search{width:min(540px,52vw);position:relative}.search input{width:100%;padding:12px 38px 12px 16px;border:1px solid #dddfe5;border-radius:14px;background:#fafafa;outline:0}
 .search input:focus{border-color:#b9bbc2;background:#fff}
 .hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span,.hero-points button{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444;cursor:pointer}.hero-points button.on{background:#171717;color:#fff;border-color:#171717}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}
-.preview{margin:4px 0 16px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}.affiliate-notice{margin-top:14px;padding:10px 13px;border:1px solid #f0ddd4;border-radius:12px;background:#fff8f4;color:#7d4a38;font-size:12px;line-height:1.6}.footer-links{display:flex;gap:8px;margin-top:8px}.footer-links a{text-decoration:underline;text-underline-offset:2px}
+.preview{margin:4px 0 16px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}.affiliate-notice{margin-top:14px;padding:11px 13px;border:1px solid #f0ddd4;border-radius:12px;background:#fff8f4;color:#7d4a38;font-size:12px;line-height:1.65}.affiliate-notice strong{font-weight:900}.affiliate-notice span{color:#777}.footer-note{margin-top:8px;color:#777;font-size:11px}.footer-links{display:flex;gap:8px;margin-top:8px}.footer-links a{text-decoration:underline;text-underline-offset:2px}.affiliate-notice{margin-top:14px;padding:10px 13px;border:1px solid #f0ddd4;border-radius:12px;background:#fff8f4;color:#7d4a38;font-size:12px;line-height:1.6}.footer-links{display:flex;gap:8px;margin-top:8px}.footer-links a{text-decoration:underline;text-underline-offset:2px}
 .quick,.chips,.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none}.quick::-webkit-scrollbar,.chips::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
 .quick{padding:2px 0 18px}.category-pages{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding:0 0 18px}.category-pages::-webkit-scrollbar{display:none}.category-page{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}.category-page.on{background:#171717;color:#fff;border-color:#171717}.pill,.chip,.tab,.sort{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}
 .pill.on,.chip.on,.tab.on,.sort.on{background:#171717;color:#fff;border-color:#171717}
@@ -66,7 +66,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <body>
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice">이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.</div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -78,9 +78,9 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <!-- 실제 상품이 있는 경우에만 주요 상품 탭을 표시합니다. -->
 <nav id="tabs" class="tabs" aria-label="상품 종류"></nav>
 
-<!-- 첫 화면에서는 여러 페이지로 들어가기 전에 실제 상품을 바로 볼 수 있도록 추천 상품을 보여줍니다. -->
+<!-- 첫 화면에서는 여러 페이지로 들어가기 전에 실제 상품을 바로 볼 수 있도록 상품을 보여줍니다. -->
 <section id="homeSection" class="section">
-<div class="section-head"><div><h2>🛍️ 오늘의 추천</h2><p>오늘 확인할 만한 상품을 먼저 골라봤어요.</p></div><span id="homeCount" class="count"></span></div>
+<div class="section-head"><div><h2>🛍️ 오늘의 상품</h2><p>오늘 확인할 만한 상품을 먼저 골라봤어요.</p></div><span id="homeCount" class="count"></span></div>
 <section id="homeGrid" class="grid" aria-live="polite"></section>
 </section>
 
@@ -118,7 +118,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <section id="rocketGrid" class="grid"></section><div id="rocketMore" class="more-wrap"></div>
 </section>
 
-<footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.<div class="footer-links"><a href="/terms.html">이용약관</a><span>·</span><a href="/privacy.html">개인정보처리방침</a></div></footer>
+<footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.<div class="footer-note">보고팡은 상품을 직접 판매하거나 결제·배송을 처리하지 않으며, 상품 구매는 외부 쇼핑몰에서 이루어집니다.</div><div class="footer-links"><a href="/terms.html">이용약관</a><span>·</span><a href="/privacy.html">개인정보처리방침</a></div></footer>
 </main>
 <script>
 // 목적별 상품 데이터를 분리해 사용합니다.
@@ -340,7 +340,7 @@ const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(
 const keyword=trendKeywords[0]||item.keyword;
 const meta=(keyword||item.rocket)?'<div class="card-meta">'+(keyword?'<span class="meta-badge">관심 키워드: '+escapeHtml(keyword)+'</span>':"")+(item.rocket?'<span class="meta-badge rocket">🚀 로켓배송</span>':"")+'</div>':"";
 const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"";
-return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 보기</a></div></article>'
+return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 상품 확인</a></a></div></article>'
 }
 
 
@@ -401,7 +401,7 @@ return selected
 function drawDiscovery(){const items=getDiscoveryItems();setSectionVisible("discoverySection",items.length>0&&!searchKeyword);if(!searchKeyword)drawGrid("discovery",items,"현재 발견할 상품이 없습니다.",{discovery:true})}
 
 // 오늘의 특가는 검색 모드가 아닐 때 첫 번째 상품 영역으로 보여줍니다.
-// 첫 화면에 표시할 추천 상품을 실제 API 상품에서 구성합니다.
+// 첫 화면에 표시할 상품을 실제 API 상품에서 구성합니다.
 function getHomeItems(){
 const discovery=getDiscoveryItems();
 const fallback=uniqueProducts([...productData.specialDeals,...productData.trendingSearch,...productData.rocketProducts]);
