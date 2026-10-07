@@ -331,7 +331,8 @@ return labels.slice(0,2)
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
 function cardHtml(item,options={}){
 const price=parsePrice(item.price),original=parsePrice(item.originalPrice);
-const apiRate=Number(String(item.discountRate??"").replace(/,/g,"").replace(/%$/,""));
+const rawApiRate=Number(String(item.discountRate??item.discountRatePercent??item.discountPercentage??item.discountPercent??"").replace(/,/g,"").replace(/%$/,""));
+const apiRate=Number.isFinite(rawApiRate)&&rawApiRate>0&&rawApiRate<1?rawApiRate*100:rawApiRate;
 const calculatedRate=original!=null&&price!=null&&original>price
   ? Math.round(((original-price)/original)*100)
   : null;
