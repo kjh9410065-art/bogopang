@@ -1,0 +1,3 @@
+// 보고팡 상품 조건 알림용 Service Worker입니다.
+self.addEventListener("push",event=>{let p={};try{p=event.data?event.data.json():{}}catch{p={title:"보고팡 상품 알림",body:"조건에 맞는 상품이 발견됐습니다."}}event.waitUntil(self.registration.showNotification(p.title||"보고팡 상품 알림",{body:p.body||"조건에 맞는 상품이 발견됐습니다.",tag:p.tag||"bogopang-alert",data:{url:p.url||"/alerts"}}))});
+self.addEventListener("notificationclick",event=>{event.notification.close();const url=event.notification.data?.url||"/alerts";event.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(clients=>{const open=clients.find(c=>new URL(c.url).pathname===url);return open?open.focus():self.clients.openWindow(url)}))});

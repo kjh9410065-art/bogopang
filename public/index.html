@@ -58,15 +58,15 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .price{font-size:20px;font-weight:900;margin-top:10px;letter-spacing:-.4px}.discount{color:var(--accent);margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:500}
 .buy{display:block;margin-top:auto;padding-top:13px;padding:11px 10px;min-height:42px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800;touch-action:manipulation}
 .empty{grid-column:1/-1;text-align:center;color:#777;padding:45px 0;background:#fff;border:1px solid var(--line);border-radius:18px}.empty strong{display:block;color:#333;font-size:15px;margin-bottom:6px}.search-tools{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}.filter-row{display:flex;gap:7px;overflow:auto;scrollbar-width:none}.filter-row::-webkit-scrollbar{display:none}.filter-title{font-size:11px;font-weight:900;color:#888;align-self:center;white-space:nowrap}.search-reset{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#999;font-size:18px;cursor:pointer;padding:4px;display:none}.search-reset.show{display:block}.reason-row{display:flex;gap:5px;min-height:18px;overflow:hidden}.reason{display:inline-block;padding:3px 6px;border-radius:999px;background:#fff1eb;color:var(--accent);font-size:10px;font-weight:900;white-space:nowrap}.more-wrap{text-align:center;margin-top:14px}.more-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 15px;font-size:12px;font-weight:800;cursor:pointer}
-.hidden{display:none!important}footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
+.alert-top{border:0;background:transparent;font-size:20px;cursor:pointer;margin-right:8px}.alert-page{max-width:920px;margin:0 auto}.alert-intro{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}.alert-actions{display:flex;gap:8px;flex-wrap:wrap}.alert-group{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;background:#fff}.alert-condition{display:grid;grid-template-columns:140px 1fr auto;gap:8px;align-items:center;margin-top:8px}.alert-condition select,.alert-condition input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:13px;background:#fff}.alert-condition button,.alert-group button,.alert-save,.alert-enable{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer}.alert-save{background:var(--accent);color:#fff;border-color:var(--accent)}.alert-preview{margin-top:12px;padding:10px 12px;border-radius:10px;background:#f7f7f7;color:#555;font-size:12px;line-height:1.6}.alert-list{margin-top:20px}.alert-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px;background:#fff}.alert-card-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.alert-card-title{font-weight:900}.alert-card-meta{color:#888;font-size:11px;margin-top:5px}.alert-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.alert-match{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);margin-top:10px;text-decoration:none;color:inherit}.alert-match img{width:54px;height:54px;object-fit:contain;border-radius:8px;background:#f7f7f7}.alert-match strong{display:block;font-size:12px}.alert-match span{font-size:12px;color:#555}.alert-empty{padding:30px;text-align:center;color:#888;border:1px dashed var(--line);border-radius:14px}.alert-note{font-size:11px;color:#888;line-height:1.6;margin-top:8px}@media(max-width:650px){.alert-condition{grid-template-columns:1fr}.alert-condition button{justify-self:start}}.hidden{display:none!important}footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
 @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 34px 10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.buy{min-height:44px;padding:12px 8px}.meta-badge{font-size:9px;padding:4px 6px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
 </style>
 </head>
 <body>
-<header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
+<header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><button class="alert-top" type="button" data-page="alerts" aria-label="상품 알림">🔔</button><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button><button type="button" data-page="alerts">🔔 상품 알림</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -118,6 +118,14 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <section id="rocketGrid" class="grid"></section><div id="rocketMore" class="more-wrap"></div>
 </section>
 
+<section id="alertSection" class="section hidden"><div class="alert-page">
+<div class="section-head"><div><h2>🔔 상품 조건 알림</h2><p>원하는 조건의 상품이 새로 발견되면 알려드려요.</p></div></div>
+<div class="alert-intro"><div class="alert-actions"><button class="alert-save" id="enablePush" type="button">🔔 알림 권한 켜기</button><button class="alert-enable" id="addAlertGroup" type="button">＋ 조건 그룹 추가</button></div><div class="alert-note" id="pushStatus">브라우저 알림을 허용하면 조건에 맞는 새 상품을 기기 알림으로 받을 수 있습니다.</div></div>
+<div id="alertEditor"></div><div class="alert-preview" id="alertPreview">조건을 설정하면 여기에 알림 조건이 표시됩니다.</div>
+<div class="alert-actions" style="margin-top:10px"><button class="alert-save" id="saveAlert" type="button">알림 조건 저장</button></div>
+<div class="alert-list"><div class="section-head"><div><h3>저장된 알림</h3><p>활성화된 조건은 상품 데이터가 갱신될 때 확인됩니다.</p></div></div><div id="alertList"></div></div>
+</div></section>
+
 <footer><strong>쿠팡 파트너스 안내</strong><br>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.<div class="footer-note">보고팡은 상품을 직접 판매하거나 결제·배송을 처리하지 않으며, 상품 구매는 외부 쇼핑몰에서 이루어집니다.</div><div class="footer-links"><a href="/terms.html">이용약관</a><span>·</span><a href="/privacy.html">개인정보처리방침</a></div></footer>
 </main>
 <script>
@@ -141,7 +149,7 @@ rocketProducts:[
 {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
 {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
-const PAGE_ROUTES={home:"/",deals:"/deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search"};
+const PAGE_ROUTES={home:"/",deals:"/deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search",alerts:"/alerts"};
 function getPageFromPath(){
 const path=window.location.pathname.replace(/\/$/,"")||"/";
 if(path==="/deals")return "deals";
@@ -149,6 +157,7 @@ if(path==="/discovery")return "discovery";
 if(path==="/trends")return "trends";
 if(path==="/rocket")return "rocket";
 if(path==="/search")return "search";
+if(path==="/alerts")return "alerts";
 return "home";
 }
 let activePage=getPageFromPath();
@@ -223,7 +232,7 @@ searchTrendOnly=false;
 document.getElementById("q").value="";
 }
 // 독립 페이지로 이동할 때 홈 화면에서 사용한 숨은 필터 상태가 영향을 주지 않도록 초기화합니다.
-if(page==="deals"||page==="discovery"||page==="trends"||page==="rocket"){
+if(page==="deals"||page==="discovery"||page==="trends"||page==="rocket"||page==="alerts"){
 selectedCategory="전체";
 selectedPrice="전체";
 sortMode="recommended";
@@ -510,6 +519,30 @@ drawSorts();
 drawGrid("grid",filtered,activePage==="trends"?"선택한 검색 키워드와 연결된 상품이 없습니다.":"현재 해당 카테고리 상품이 없습니다.");
 }
 
+// 상품 알림 조건 편집기와 저장 목록을 관리합니다.
+let alertGroups=[{conditions:[{type:"keyword",value:""}]}];
+let alertGroupJoin="OR",savedAlerts=[];
+function getAlertClientId(){let id=localStorage.getItem("bogopang-alert-client-id");if(!id){id=crypto.randomUUID();localStorage.setItem("bogopang-alert-client-id",id)}return id}
+const alertClientId=getAlertClientId();
+async function alertApi(path,options={}){const headers=new Headers(options.headers||{});headers.set("X-Bogopang-Client-Id",alertClientId);if(options.body)headers.set("Content-Type","application/json");const r=await fetch("/api/alerts"+path,{...options,headers});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw new Error(d.error||"상품 알림 요청에 실패했습니다.");return d}
+function conditionLabel(type){return({keyword:"상품명/키워드",minPrice:"최소 가격",maxPrice:"최대 가격",category:"카테고리",rocket:"로켓배송"})[type]||"조건"}
+function conditionText(c){if(c.type==="keyword")return "'"+c.value+"' 포함";if(c.type==="minPrice")return Number(c.value).toLocaleString("ko-KR")+"원 이상";if(c.type==="maxPrice")return Number(c.value).toLocaleString("ko-KR")+"원 이하";if(c.type==="category")return "카테고리: "+c.value;if(c.type==="rocket")return c.value?"로켓배송":"로켓배송 제외";return ""}
+function renderAlertValue(c,gi,ci){if(c.type==="rocket")return '<label style="display:flex;align-items:center;gap:6px"><input data-alert-value="'+gi+"-"+ci+'" type="checkbox" '+(c.value?"checked":"")+'> 로켓배송</label>';const type=c.type==="minPrice"||c.type==="maxPrice"?"number":"text";const ph=c.type==="keyword"?"예: 캠핑 의자":c.type==="category"?"예: 스포츠/레저":"가격";return '<input data-alert-value="'+gi+"-"+ci+'" type="'+type+'" value="'+escapeHtml(String(c.value??""))+'" placeholder="'+ph+'">'}
+function renderAlertEditor(){const el=document.getElementById("alertEditor");el.innerHTML=alertGroups.map((g,gi)=>'<div class="alert-group"><div class="alert-card-head"><strong>조건 그룹 '+(gi+1)+'</strong><button type="button" data-alert-remove-group="'+gi+'">그룹 삭제</button></div>'+g.conditions.map((c,ci)=>'<div class="alert-condition"><select data-alert-type="'+gi+"-"+ci+'">'+["keyword","minPrice","maxPrice","category","rocket"].map(t=>'<option value="'+t+'" '+(c.type===t?"selected":"")+'>'+conditionLabel(t)+"</option>").join("")+'</select>'+renderAlertValue(c,gi,ci)+'<button type="button" data-alert-remove-condition="'+gi+"-"+ci+'">삭제</button></div>').join("")+'<div class="alert-actions" style="margin-top:9px"><button type="button" data-alert-add-condition="'+gi+'">＋ 조건 추가</button></div></div>'+(gi<alertGroups.length-1?'<div style="text-align:center;margin-top:8px"><select data-alert-group-join style="padding:7px;border:1px solid var(--line);border-radius:8px;font-weight:800"><option value="OR" '+(alertGroupJoin==="OR"?"selected":"")+'>OR</option><option value="AND" '+(alertGroupJoin==="AND"?"selected":"")+'>AND</option></select></div>':"")).join("");
+document.querySelectorAll("[data-alert-type]").forEach(s=>s.onchange=()=>{const [gi,ci]=s.dataset.alertType.split("-").map(Number);alertGroups[gi].conditions[ci]={type:s.value,value:s.value==="rocket"?true:""};renderAlertEditor();renderAlertPreview()});
+document.querySelectorAll("[data-alert-value]").forEach(x=>x.oninput=()=>{const [gi,ci]=x.dataset.alertValue.split("-").map(Number);alertGroups[gi].conditions[ci].value=x.type==="checkbox"?x.checked:x.value;renderAlertPreview()});
+document.querySelectorAll("[data-alert-add-condition]").forEach(b=>b.onclick=()=>{alertGroups[Number(b.dataset.alertAddCondition)].conditions.push({type:"keyword",value:""});renderAlertEditor();renderAlertPreview()});
+document.querySelectorAll("[data-alert-remove-condition]").forEach(b=>b.onclick=()=>{const [gi,ci]=b.dataset.alertRemoveCondition.split("-").map(Number);if(alertGroups[gi].conditions.length>1)alertGroups[gi].conditions.splice(ci,1);renderAlertEditor();renderAlertPreview()});
+document.querySelectorAll("[data-alert-remove-group]").forEach(b=>b.onclick=()=>{if(alertGroups.length>1)alertGroups.splice(Number(b.dataset.alertRemoveGroup),1);renderAlertEditor();renderAlertPreview()});
+const join=document.querySelector("[data-alert-group-join]");if(join)join.onchange=()=>{alertGroupJoin=join.value;renderAlertPreview()}}
+function renderAlertPreview(){const groups=alertGroups.map(g=>g.conditions.filter(c=>c.type==="rocket"||String(c.value??"").trim()!=="")).filter(Boolean).filter(g=>g.length);document.getElementById("alertPreview").textContent=groups.length?groups.map(g=>g.map(conditionText).join(" AND ")).join(" "+alertGroupJoin+" "):"조건을 설정하면 여기에 알림 조건이 표시됩니다."}
+async function loadAlerts(){try{const d=await alertApi("/list");savedAlerts=d.alerts||[];renderAlertList()}catch(e){document.getElementById("alertList").innerHTML='<div class="alert-empty">'+escapeHtml(e.message)+'</div>'}}
+function renderAlertList(){const el=document.getElementById("alertList");if(!savedAlerts.length){el.innerHTML='<div class="alert-empty">저장된 상품 알림이 없습니다.</div>';return}el.innerHTML=savedAlerts.map(a=>{const text=(a.groups||[]).map(g=>(g.conditions||[]).map(conditionText).join(" AND ")).join(" "+(a.groupJoin||"OR")+" ");return '<div class="alert-card"><div class="alert-card-head"><div><div class="alert-card-title">'+escapeHtml(a.name||"상품 알림")+'</div><div class="alert-card-meta">'+escapeHtml(text)+'</div></div><span>'+(a.active?"🟢 활성":"⚪ 일시정지")+'</span></div><div class="alert-card-actions"><button class="alert-enable" data-alert-toggle="'+a.id+'">'+(a.active?"일시정지":"활성화")+'</button><button class="alert-enable" data-alert-delete="'+a.id+'">삭제</button></div>'+(a.matches||[]).slice(0,5).map(p=>'<a class="alert-match" href="'+escapeHtml(p.url||"#")+'" target="_blank" rel="nofollow sponsored noopener"><img src="'+escapeHtml(p.image||"")+'" alt=""><span><strong>'+escapeHtml(p.name)+'</strong>'+Number(p.price).toLocaleString("ko-KR")+'원</span></a>').join("")+'</div>'}).join("");document.querySelectorAll("[data-alert-toggle]").forEach(b=>b.onclick=async()=>{try{await alertApi("/toggle",{method:"POST",body:JSON.stringify({id:b.dataset.alertToggle,active:b.textContent.includes("활성화")})});loadAlerts()}catch(e){alert(e.message)}});document.querySelectorAll("[data-alert-delete]").forEach(b=>b.onclick=async()=>{if(!confirm("이 상품 알림을 삭제할까요?"))return;try{await alertApi("/delete",{method:"POST",body:JSON.stringify({id:b.dataset.alertDelete})});loadAlerts()}catch(e){alert(e.message)}})}
+async function enableAlertPush(){const s=document.getElementById("pushStatus");try{const key=await fetch("/api/alerts/public-key").then(r=>r.json());if(!key.publicKey)throw new Error("현재 웹 푸시 설정이 준비되지 않았습니다.");if(!("serviceWorker" in navigator)||!("PushManager" in window))throw new Error("이 브라우저에서는 웹 알림을 지원하지 않습니다.");if(await Notification.requestPermission()!=="granted"){s.textContent="브라우저 알림 권한이 허용되지 않았습니다.";return}await navigator.serviceWorker.register("/sw.js");const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToBytes(key.publicKey)});const j=sub.toJSON();await alertApi("/subscribe",{method:"POST",body:JSON.stringify({subscription:{endpoint:j.endpoint,expirationTime:j.expirationTime??null,keys:j.keys}})});s.textContent="웹 알림이 켜졌습니다. 조건에 맞는 새 상품을 알려드릴게요."}catch(e){s.textContent=e.message||"웹 알림 설정에 실패했습니다."}}
+function base64UrlToBytes(v){const p="=".repeat((4-v.length%4)%4),b=atob((v+p).replace(/-/g,"+").replace(/_/g,"/")),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+async function saveAlert(){const groups=alertGroups.map(g=>({conditions:g.conditions.filter(c=>c.type==="rocket"||String(c.value??"").trim()!=="")}));if(groups.some(g=>!g.conditions.length)){alert("모든 조건 그룹에 조건을 하나 이상 설정해 주세요.");return}try{const d=await alertApi("/save",{method:"POST",body:JSON.stringify({alert:{id:crypto.randomUUID(),groups,groupJoin:alertGroupJoin,active:true}})});savedAlerts=d.alerts||savedAlerts;renderAlertList();alert("상품 알림을 저장했습니다.")}catch(e){alert(e.message)}}
+function drawAlerts(){setSectionVisible("alertSection",activePage==="alerts");if(activePage==="alerts"){renderAlertEditor();renderAlertPreview();loadAlerts()}}
+
 // 현재 페이지에 필요한 영역만 표시합니다.
 function draw(){
 ensureActiveTab();
@@ -525,7 +558,8 @@ const isDeals=activePage==="deals";
 const isDiscovery=activePage==="discovery";
 const isTrends=activePage==="trends";
 const isRocket=activePage==="rocket";
-const isCategory=!isHome&&!isDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch;
+const isAlerts=activePage==="alerts";
+const isCategory=!isHome&&!isDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch&&!isAlerts;
 
 // 검색 화면에서만 상단 히어로/주요 탭을 숨기고, 특가·발견·검색·로켓 페이지에서는 탭을 계속 보여줍니다.
 document.querySelector(".hero").classList.toggle("hidden",isSearch);
@@ -540,10 +574,12 @@ setSectionVisible("trendSection",isTrends);
 setSectionVisible("rocketSection",isRocket);
 setSectionVisible("browseSection",isCategory||isTrends);
 setSectionVisible("searchSection",isSearch);
+drawAlerts();
 
 if(isHome){
 drawHome();
 }
+if(isAlerts){document.querySelector(".hero").classList.add("hidden");document.getElementById("quickPrices").classList.add("hidden");document.getElementById("categoryPages").classList.add("hidden");}
 
 if(isDeals){
 const raw=sortItems(filterItems(productData.specialDeals));
@@ -610,6 +646,10 @@ document.getElementById("q").addEventListener("keydown",event=>{if(event.key==="
 
 // 상단 주요 페이지 메뉴를 연결합니다.
 document.querySelectorAll("[data-page]").forEach(button=>button.onclick=()=>navigateToPage(button.dataset.page));
+document.getElementById("addAlertGroup").onclick=()=>{alertGroups.push({conditions:[{type:"keyword",value:""}]});renderAlertEditor();renderAlertPreview()};
+document.getElementById("saveAlert").onclick=saveAlert;
+document.getElementById("enablePush").onclick=enableAlertPush;
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
 
 // 로고 클릭은 홈으로 이동합니다.
 document.querySelector(".logo").onclick=event=>{event.preventDefault();navigateToPage("home")};

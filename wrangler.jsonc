@@ -7,9 +7,27 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "triggers": {
-    "crons": ["0 */6 * * *"]
+    "crons": [
+      "0 */6 * * *"
+    ]
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ALERT_STORE",
+        "class_name": "ProductAlertStore"
+      }
+    ]
+  },
+  "exports": {
+    "ProductAlertStore": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
   }
 }

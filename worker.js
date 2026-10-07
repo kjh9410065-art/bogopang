@@ -1,3 +1,6 @@
+import { DurableObject } from "cloudflare:workers";
+import { sendPushBatch } from "@mmmike/web-push/send";
+
 // 보고팡 Cloudflare Worker입니다.
 // Git 연동 자동 배포 연결 확인용 최신 버전입니다.
 // 외부 트렌드로 관심 키워드를 먼저 선정한 뒤 쿠팡 상품을 수집하고 캐시합니다.
@@ -46,6 +49,16 @@ export default {
           headers: { "Content-Type": "application/json; charset=UTF-8" }
         });
       }
+    }
+
+    // 상품 알림의 VAPID 공개키를 반환합니다. 비밀키는 브라우저에 노출하지 않습니다.
+    if (url.pathname === "/api/alerts/public-key" && request.method === "GET") {
+      return jsonResponse({ publicKey: String(env.VAPID_PUBLIC_KEY || "").trim() });
+    }
+
+    // 상품 알림 관련 요청은 Durable Object에 저장합니다.
+    if (url.pathname.startsWith("/api/alerts")) {
+      return handleAlertRequest(request, env);
     }
 
     // 상품 API 요청은 목적별 상품 데이터를 가져와 1시간 캐시합니다.
@@ -942,6 +955,10 @@ async function refreshProducts(env) {
     });
 
     await cache.put(request, response);
+
+    // 새 상품 데이터가 저장된 직후 조건 알림을 검사합니다.
+    await notifyMatchingAlerts(env, products);
+
     console.log("보고팡 상품 갱신 완료:", new Date().toISOString());
     return {
       productCount:
@@ -953,4 +970,192 @@ async function refreshProducts(env) {
     console.error("보고팡 상품 갱신 실패:", error);
     throw error;
   }
+}
+
+
+/* 상품 조건 알림 API와 저장소입니다. */
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json; charset=UTF-8", "Cache-Control": "no-store" }
+  });
+}
+
+function getClientId(request) {
+  const value = String(request.headers.get("X-Bogopang-Client-Id") || "").trim();
+  return /^[a-zA-Z0-9_-]{16,128}$/.test(value) ? value : "";
+}
+
+async function handleAlertRequest(request, env) {
+  if (!env.ALERT_STORE) return jsonResponse({ ok:false, error:"상품 알림 저장소가 준비되지 않았습니다." },503);
+  const clientId=getClientId(request);
+  if(!clientId) return jsonResponse({ok:false,error:"알림 식별자가 없습니다."},400);
+  const stub=env.ALERT_STORE.get(env.ALERT_STORE.idFromName("global"));
+  const url=new URL(request.url);
+  const target=new URL(url);
+  target.pathname=url.pathname.replace(/^\/api\/alerts/,"")||"/";
+  return stub.fetch(new Request(target,{method:request.method,headers:request.headers,body:["GET","HEAD"].includes(request.method)?undefined:request.body}));
+}
+
+function alertMatchesProduct(alert,item) {
+  if(!alert?.active) return false;
+  const groups=Array.isArray(alert.groups)?alert.groups:[];
+  if(!groups.length) return false;
+  const name=String(item.name||"").toLowerCase();
+  const category=String(item.category||"").toLowerCase();
+  const price=Number(item.price);
+  const rocket=item.rocket===true;
+  const test=c=>{
+    if(c.type==="keyword") return Boolean(String(c.value||"").trim())&&name.includes(String(c.value).trim().toLowerCase());
+    if(c.type==="minPrice") return Number.isFinite(price)&&price>=Number(c.value);
+    if(c.type==="maxPrice") return Number.isFinite(price)&&price<=Number(c.value);
+    if(c.type==="category") return Boolean(String(c.value||"").trim())&&category===String(c.value).trim().toLowerCase();
+    if(c.type==="rocket") return rocket===Boolean(c.value);
+    return false;
+  };
+  const results=groups.map(g=>Array.isArray(g.conditions)&&g.conditions.length?g.conditions.every(test):false);
+  return alert.groupJoin==="AND"?results.every(Boolean):results.some(Boolean);
+}
+
+function normalizeAlertProduct(item) {
+  return {
+    id:String(item.id||"").trim(), name:String(item.name||"").trim(), price:Number(item.price),
+    image:String(item.image||"").trim(), category:String(item.category||"").trim(),
+    rocket:item.rocket===true, url:String(item.url||"").trim()
+  };
+}
+
+async function notifyMatchingAlerts(env,products) {
+  if(!env.ALERT_STORE) return;
+  const source=[...(products.specialDeals||[]),...(products.trendingSearch||[]),...(products.rocketProducts||[])];
+  const seen=new Set(), unique=[];
+  for(const item of source){
+    const p=normalizeAlertProduct(item);
+    if(!p.id||!p.name||!Number.isFinite(p.price)||seen.has(p.id)) continue;
+    seen.add(p.id); unique.push(p);
+  }
+  if(!unique.length) return;
+  const stub=env.ALERT_STORE.get(env.ALERT_STORE.idFromName("global"));
+  await stub.fetch("https://alert-store/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({products:unique})});
+}
+
+export class ProductAlertStore extends DurableObject {
+  constructor(ctx,env) {
+    super(ctx,env); this.sql=ctx.storage.sql;
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS clients(client_id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at INTEGER NOT NULL)`);
+  }
+
+  async fetch(request) {
+    const url=new URL(request.url);
+    try {
+      const clientId=String(request.headers.get("X-Bogopang-Client-Id")||"").trim();
+      if(request.method==="GET"&&url.pathname==="/list"){
+        const row=this.sql.exec("SELECT data FROM clients WHERE client_id = ?",clientId).toArray()[0];
+        const data=row?JSON.parse(row.data):{alerts:[],subscription:null};
+        return jsonResponse({ok:true,alerts:data.alerts||[]});
+      }
+      if(request.method==="POST"&&url.pathname==="/save"){
+        const body=await request.json(), alert=sanitizeAlert(body.alert);
+        if(!clientId||!alert)return jsonResponse({ok:false,error:"알림 조건이 올바르지 않습니다."},400);
+        const data=await this.readClient(clientId), index=data.alerts.findIndex(a=>a.id===alert.id);
+        if(index>=0){alert.matches=data.alerts[index].matches||[];alert.alertedProductState=data.alerts[index].alertedProductState||{};data.alerts[index]=alert}
+        else data.alerts.push(alert);
+        await this.writeClient(clientId,data); return jsonResponse({ok:true,alerts:data.alerts});
+      }
+      if(request.method==="POST"&&url.pathname==="/delete"){
+        const body=await request.json(),data=await this.readClient(clientId);
+        data.alerts=data.alerts.filter(a=>a.id!==String(body.id||"")); await this.writeClient(clientId,data);
+        return jsonResponse({ok:true,alerts:data.alerts});
+      }
+      if(request.method==="POST"&&url.pathname==="/toggle"){
+        const body=await request.json(),data=await this.readClient(clientId);
+        const alert=data.alerts.find(a=>a.id===String(body.id||""));
+        if(!alert)return jsonResponse({ok:false,error:"알림을 찾을 수 없습니다."},404);
+        alert.active=Boolean(body.active); alert.updatedAt=Date.now(); await this.writeClient(clientId,data);
+        return jsonResponse({ok:true,alerts:data.alerts});
+      }
+      if(request.method==="POST"&&url.pathname==="/subscribe"){
+        const body=await request.json(),s=body.subscription;
+        if(!clientId||!s?.endpoint||!s?.keys?.p256dh||!s?.keys?.auth)return jsonResponse({ok:false,error:"푸시 구독 정보가 올바르지 않습니다."},400);
+        if(!/^https:\/\//i.test(String(s.endpoint)))return jsonResponse({ok:false,error:"허용되지 않은 알림 주소입니다."},400);
+        const data=await this.readClient(clientId);
+        data.subscription={endpoint:String(s.endpoint),expirationTime:s.expirationTime??null,keys:{p256dh:String(s.keys.p256dh),auth:String(s.keys.auth)}};
+        await this.writeClient(clientId,data); return jsonResponse({ok:true});
+      }
+      if(request.method==="DELETE"&&url.pathname==="/subscribe"){
+        const data=await this.readClient(clientId);data.subscription=null;await this.writeClient(clientId,data);return jsonResponse({ok:true});
+      }
+      if(request.method==="POST"&&url.pathname==="/check") return this.checkAlerts((await request.json()).products||[]);
+      return jsonResponse({ok:false,error:"알 수 없는 알림 요청입니다."},404);
+    } catch(error) {
+      console.error("보고팡 상품 알림 저장소 오류:",error);
+      return jsonResponse({ok:false,error:error.message||"상품 알림 처리에 실패했습니다."},500);
+    }
+  }
+
+  async readClient(clientId){
+    const row=this.sql.exec("SELECT data FROM clients WHERE client_id = ?",clientId).toArray()[0];
+    if(!row)return {alerts:[],subscription:null};
+    try{const d=JSON.parse(row.data);return {alerts:Array.isArray(d.alerts)?d.alerts:[],subscription:d.subscription||null}}catch{return {alerts:[],subscription:null}}
+  }
+
+  async writeClient(clientId,data){
+    this.sql.exec("INSERT OR REPLACE INTO clients(client_id,data,updated_at) VALUES(?,?,?)",clientId,JSON.stringify(data),Date.now());
+  }
+
+  async checkAlerts(products){
+    const rows=this.sql.exec("SELECT client_id,data FROM clients").toArray();
+    let notified=0;
+    for(const row of rows){
+      const data=JSON.parse(row.data);let changed=false;
+      for(const alert of Array.isArray(data.alerts)?data.alerts:[]){
+        if(!alert.active)continue;
+        const state=alert.alertedProductState||{},matched=[];
+        for(const product of products){
+          if(!alertMatchesProduct(alert,product))continue;
+          const previous=state[product.id], priceChanged=previous&&Number(previous.price)!==Number(product.price);
+          if(!previous||priceChanged){matched.push(product);state[product.id]={price:product.price,alertedAt:Date.now()}}
+        }
+        if(!matched.length)continue;
+        alert.alertedProductState=trimAlertedState(state);alert.lastCheckedAt=Date.now();alert.lastMatchedAt=Date.now();
+        alert.matches=[...matched.map(p=>({...p,alertId:alert.id,matchedAt:Date.now()})),...(alert.matches||[])].slice(0,20);
+        const subscription=data.subscription;
+        if(subscription&&String(this.env.VAPID_PRIVATE_KEY||"").trim()){
+          try{
+            const result=await sendPushBatch([subscription],{
+              title:"🔔 원하는 상품이 발견됐어요",
+              body:matched.length===1?matched[0].name:matched.slice(0,3).map(p=>p.name).join(" · ")+(matched.length>3?` 외 ${matched.length-3}개`:""),
+              url:"/alerts",tag:`bogopang-alert-${alert.id}`
+            },{
+              publicKey:String(this.env.VAPID_PUBLIC_KEY||"").trim(),
+              privateKey:String(this.env.VAPID_PRIVATE_KEY||"").trim(),
+              subject:String(this.env.VAPID_SUBJECT||"mailto:admin@bogopang.tcflick.com").trim()
+            },{ttl:86400,urgency:"high",concurrency:1});
+            if(result.gone.length)data.subscription=null; else notified+=result.delivered;
+          }catch(error){console.error("보고팡 Web Push 전송 실패:",error.message||error)}
+        }
+        changed=true;
+      }
+      if(changed)await this.writeClient(row.client_id,data);
+    }
+    return jsonResponse({ok:true,notified});
+  }
+}
+
+function sanitizeAlert(raw){
+  if(!raw||typeof raw!=="object")return null;
+  const groups=Array.isArray(raw.groups)?raw.groups.slice(0,20):[];
+  const cleanGroups=groups.map(g=>({conditions:(Array.isArray(g?.conditions)?g.conditions.slice(0,20):[]).map(c=>{
+    const type=String(c?.type||"");
+    if(!["keyword","minPrice","maxPrice","category","rocket"].includes(type))return null;
+    if(type==="rocket")return {type,value:Boolean(c.value)};
+    if(type==="minPrice"||type==="maxPrice"){const value=Number(c.value);return Number.isFinite(value)&&value>=0?{type,value:Math.round(value)}:null}
+    const value=String(c.value||"").trim().slice(0,100);return value?{type,value}:null;
+  }).filter(Boolean)})).filter(g=>g.conditions.length);
+  if(!cleanGroups.length)return null;
+  return {id:String(raw.id||crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,80)||crypto.randomUUID(),name:"상품 알림",groups:cleanGroups,groupJoin:raw.groupJoin==="AND"?"AND":"OR",active:raw.active!==false,createdAt:Number(raw.createdAt)||Date.now(),updatedAt:Date.now(),matches:[],alertedProductState:{}};
+}
+
+function trimAlertedState(state){
+  return Object.fromEntries(Object.entries(state).sort((a,b)=>Number(b[1]?.alertedAt||0)-Number(a[1]?.alertedAt||0)).slice(0,500));
 }
