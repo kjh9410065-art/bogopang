@@ -17,7 +17,7 @@ const MIN_TRENDING_PRODUCTS = 8;
 const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
 const FALLBACK_SEARCH_KEYWORDS = ["생활용품", "주방용품", "식품", "가전", "디지털"];
 // 할인율 데이터 구조가 변경된 기존 캐시를 즉시 무효화하기 위한 캐시 버전입니다.
-const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=discount-rate-v2";
+const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=discount-rate-v3";
 
 // 쿠팡 상품은 가격과 특가 상태가 변할 수 있으므로 하루 1회보다 자주 갱신합니다.
 // 6시간 간격으로 갱신해 최신성과 API 호출량 사이의 균형을 유지합니다.
@@ -122,6 +122,19 @@ function formatUtcDate(date) {
     pad(date.getUTCSeconds()) +
     "Z"
   );
+}
+
+// 쿠팡 API 가격 값을 숫자로 안전하게 정규화합니다.
+function normalizePrice(value) {
+  const normalized = Number(String(value ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(normalized) && normalized > 0 ? normalized : null;
+}
+
+// 쿠팡 API가 실제로 제공한 할인율만 정수 퍼센트로 정규화합니다.
+function normalizeDiscountRate(value) {
+  const normalized = Number(String(value ?? "").replace(/,/g, "").replace(/%$/, "").trim());
+  if (!Number.isFinite(normalized) || normalized <= 0 || normalized > 100) return null;
+  return normalized > 0 && normalized < 1 ? Math.round(normalized * 100) : Math.round(normalized);
 }
 
 // 쿠팡 파트너스 API를 호출합니다.
@@ -559,7 +572,8 @@ async function loadProducts(env) {
       stats.deeplinkMatched += 1;
     }
 
-    const price = Number(item.productPrice);
+    // 쿠팡 Open API의 실제 상품 가격 필드는 productPrice를 판매가격으로 사용합니다.
+    const price = normalizePrice(item.productPrice);
     if (
       (!item.productId && !item.productUrl) ||
       !item.productName ||
@@ -576,49 +590,20 @@ async function loadProducts(env) {
         ? [item.trendKeyword]
         : [];
 
-    // 쿠팡 API가 제공하는 여러 정상가 필드 중 실제 값이 있는 첫 번째 가격을 사용합니다.
-    const originalPriceCandidates = [
-      item.originalPrice,
-      item.productOriginalPrice,
-      item.listPrice
-    ];
-    const originalPrice = originalPriceCandidates
-      .map((value) => {
-        const normalized = Number(String(value ?? "").replace(/,/g, "").replace(/%$/, ""));
-        return Number.isFinite(normalized) && normalized > 0 ? normalized : null;
-      })
-      .find((value) => value != null) ?? null;
-
-    // 쿠팡 API 할인율은 정상가가 없어도 유효하면 그대로 사용할 수 있습니다.
-    const rawDiscountRate = Number(
-      String(
-        item.discountRate ??
-        item.discountRatePercent ??
-        item.discountPercentage ??
-        item.discountPercent ??
-        ""
-      )
-        .replace(/,/g, "")
-        .replace(/%$/, "")
-    );
-    // API가 0.25처럼 비율값으로 보내는 경우에도 25%로 정상 표시합니다.
-    const apiDiscountRate =
-      Number.isFinite(rawDiscountRate) && rawDiscountRate > 0 && rawDiscountRate < 1
-        ? rawDiscountRate * 100
-        : rawDiscountRate;
+    // 쿠팡 Open API에서 실제로 제공되는 할인 전 가격(originalPrice)을 사용합니다.
+    // originalPrice가 판매가보다 높을 때만 가격 기준으로 할인율을 계산합니다.
+    const originalPrice = normalizePrice(item.originalPrice);
     const calculatedDiscountRate =
       originalPrice != null && originalPrice > price
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
         : null;
 
-    // API 할인율과 실제 가격 계산값이 크게 다르면 실제 가격을 우선합니다.
-    // 15%p 이내의 차이는 쿠팡 API 값을 유지하고, 그보다 큰 차이는 가격 기준값을 사용합니다.
+    // API 응답에 실제 discountRate가 함께 제공되는 경우에만 직접 사용합니다.
+    // 존재하지 않는 필드를 추정하거나 상품명/카테고리로 할인율을 만들지 않습니다.
+    const apiDiscountRate = normalizeDiscountRate(item.discountRate);
     const discountRate =
-      Number.isFinite(apiDiscountRate) && apiDiscountRate > 0
-        ? calculatedDiscountRate != null &&
-          Math.abs(apiDiscountRate - calculatedDiscountRate) > 15
-          ? calculatedDiscountRate
-          : Math.round(apiDiscountRate)
+      apiDiscountRate != null
+        ? apiDiscountRate
         : calculatedDiscountRate;
 
     return {
