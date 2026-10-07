@@ -589,11 +589,22 @@ async function loadProducts(env) {
       .find((value) => value != null) ?? null;
 
     // 쿠팡 API 할인율은 정상가가 없어도 유효하면 그대로 사용할 수 있습니다.
-    const apiDiscountRate = Number(
-      String(item.discountRate ?? item.discountRatePercent ?? "")
+    const rawDiscountRate = Number(
+      String(
+        item.discountRate ??
+        item.discountRatePercent ??
+        item.discountPercentage ??
+        item.discountPercent ??
+        ""
+      )
         .replace(/,/g, "")
         .replace(/%$/, "")
     );
+    // API가 0.25처럼 비율값으로 보내는 경우에도 25%로 정상 표시합니다.
+    const apiDiscountRate =
+      Number.isFinite(rawDiscountRate) && rawDiscountRate > 0 && rawDiscountRate < 1
+        ? rawDiscountRate * 100
+        : rawDiscountRate;
     const calculatedDiscountRate =
       originalPrice != null && originalPrice > price
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
