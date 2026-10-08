@@ -16,8 +16,15 @@ const TREND_KEYWORD_CANDIDATE_LIMIT = 12;
 const MIN_TRENDING_PRODUCTS = 8;
 const COUPANG_SEARCH_PRODUCT_LIMIT = 4;
 const FALLBACK_SEARCH_KEYWORDS = ["생활용품", "주방용품", "식품", "가전", "디지털"];
+const GENERAL_DEAL_SEARCH_KEYWORDS = [
+  "생활용품", "주방용품", "식품", "가전", "디지털",
+  "패션", "뷰티", "스포츠", "유아", "반려동물",
+  "생필품", "청소용품", "수납용품", "건강용품", "캠핑용품", "문구"
+];
+const GENERAL_DEAL_TARGET = 12;
+const GENERAL_DEAL_SEARCH_LIMIT = 10;
 // 할인율 데이터 구조가 변경된 기존 캐시를 즉시 무효화하기 위한 캐시 버전입니다.
-const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=wow-deals-v1";
+const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=general-deals-v2";
 
 // 쿠팡 상품은 가격과 특가 상태가 변할 수 있으므로 하루 1회보다 자주 갱신합니다.
 // 6시간 간격으로 갱신해 최신성과 API 호출량 사이의 균형을 유지합니다.
@@ -317,6 +324,68 @@ async function loadProducts(env) {
     }
   }
 
+  // 오늘의 특가 전용 검색입니다.
+  // Google Trends 결과가 없거나 할인 상품이 부족한 날에도 특가 후보를 확보하기 위해
+  // 공식 Coupang Search API를 별도로 조회합니다. Gold Box는 아래 최종 필터에서 제외합니다.
+  const generalDealRaw = [];
+  const dealSearchSeen = new Set();
+
+  const isDiscountedRawProduct = (item) => {
+    const price = normalizePrice(item.productPrice);
+    const originalPrice = normalizePrice(
+      item.originalPrice ?? item.productOriginalPrice ?? item.listPrice
+    );
+    const discountRate = normalizeDiscountRate(item.discountRate);
+
+    return Boolean(
+      (originalPrice != null && price != null && originalPrice > price) ||
+      (discountRate != null && discountRate > 0)
+    );
+  };
+
+  for (const keyword of GENERAL_DEAL_SEARCH_KEYWORDS) {
+    if (generalDealRaw.length >= GENERAL_DEAL_TARGET) break;
+
+    try {
+      const query =
+        `?keyword=${encodeURIComponent(keyword)}&limit=${GENERAL_DEAL_SEARCH_LIMIT}`;
+      const result = await coupangRequest("GET", SEARCH_PATH + query, env);
+      const products = Array.isArray(result.data?.productData)
+        ? result.data.productData
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      stats.searchKeywords += 1;
+      stats.search += products.length;
+
+      for (const item of products) {
+        const key = productIdentity(item);
+        if (!key || dealSearchSeen.has(key) || !isDiscountedRawProduct(item)) continue;
+        dealSearchSeen.add(key);
+        generalDealRaw.push({
+          ...item,
+          trendKeyword: null,
+          trendKeywords: [],
+          trendSource: "쿠팡 할인상품 검색",
+          trendIsFallback: true
+        });
+
+        if (generalDealRaw.length >= GENERAL_DEAL_TARGET) break;
+      }
+
+      console.log(
+        "보고팡 일반 특가 검색 상품 수:",
+        keyword,
+        products.length,
+        "할인 후보:",
+        generalDealRaw.length
+      );
+    } catch (error) {
+      console.error("보고팡 일반 특가 검색 실패:", keyword, error.message);
+    }
+  }
+
   // 상품 ID 기준으로 중복 제거하면서 여러 트렌드 키워드의 연결 정보는 합칩니다.
   const uniqueById = (products) => {
     const unique = [];
@@ -592,7 +661,14 @@ async function loadProducts(env) {
 
     // 쿠팡 Open API에서 실제로 제공되는 할인 전 가격(originalPrice)을 사용합니다.
     // originalPrice가 판매가보다 높을 때만 가격 기준으로 할인율을 계산합니다.
-    const originalPrice = normalizePrice(item.originalPrice);
+    const originalPriceCandidates = [
+      item.originalPrice,
+      item.productOriginalPrice,
+      item.listPrice
+    ];
+    const originalPrice = originalPriceCandidates
+      .map(normalizePrice)
+      .find((value) => value != null) ?? null;
     const calculatedDiscountRate =
       originalPrice != null && originalPrice > price
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
@@ -628,7 +704,8 @@ async function loadProducts(env) {
   const goldboxIds = new Set(
     goldboxProducts.map((item) => productIdentity(item)).filter(Boolean)
   );
-  const generalDealRaw = uniqueById(trendingRaw).filter((item) => {
+  const specialDealCandidates = uniqueById([...generalDealRaw, ...trendingRaw]);
+  const generalDealRawFiltered = specialDealCandidates.filter((item) => {
     const key = productIdentity(item);
     if (!key || goldboxIds.has(key)) return false;
 
@@ -644,7 +721,7 @@ async function loadProducts(env) {
     );
   });
 
-  const specialDeals = generalDealRaw
+  const specialDeals = generalDealRawFiltered
     .map((item) => toSiteProduct(item, "오늘의 특가"))
     .filter(Boolean);
 
@@ -902,7 +979,7 @@ function decodeXml(value) {
 // 상품 데이터에 실제 표시 가능한 상품이 있는지 확인합니다.
 function hasProducts(data) {
   if (!data || Array.isArray(data)) return false;
-  return ["specialDeals", "trendingSearch", "rocketProducts"]
+  return ["specialDeals", "wowDeals", "trendingSearch", "rocketProducts"]
     .some((key) => Array.isArray(data[key]) && data[key].length > 0);
 }
 
@@ -986,6 +1063,7 @@ async function refreshProducts(env) {
     return {
       productCount:
         products.specialDeals.length +
+        products.wowDeals.length +
         products.trendingSearch.length +
         products.rocketProducts.length
     };
