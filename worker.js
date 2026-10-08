@@ -21,7 +21,7 @@ const GENERAL_DEAL_SEARCH_KEYWORDS = [
   "패션", "뷰티", "스포츠", "유아", "반려동물",
   "생필품", "청소용품", "수납용품", "건강용품", "캠핑용품", "문구"
 ];
-const GENERAL_DEAL_TARGET = 12;
+const GENERAL_DEAL_TARGET = 20;
 const GENERAL_DEAL_SEARCH_LIMIT = 10;
 // 할인율 데이터 구조가 변경된 기존 캐시를 즉시 무효화하기 위한 캐시 버전입니다.
 const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=general-deals-v2";
@@ -704,7 +704,7 @@ async function loadProducts(env) {
   const goldboxIds = new Set(
     goldboxProducts.map((item) => productIdentity(item)).filter(Boolean)
   );
-  const specialDealCandidates = uniqueById([...generalDealRaw, ...trendingRaw]);
+  const specialDealCandidates = uniqueById(generalDealRaw);
   const generalDealRawFiltered = specialDealCandidates.filter((item) => {
     const key = productIdentity(item);
     if (!key || goldboxIds.has(key)) return false;
@@ -723,7 +723,8 @@ async function loadProducts(env) {
 
   const specialDeals = generalDealRawFiltered
     .map((item) => toSiteProduct(item, "오늘의 특가"))
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, GENERAL_DEAL_TARGET);
 
   const wowDeals = uniqueById(goldboxProducts)
     .map((item) => toSiteProduct(item, "와우회원 전용 특가"))
