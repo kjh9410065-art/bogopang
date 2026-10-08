@@ -623,8 +623,33 @@ async function loadProducts(env) {
     };
   };
 
-  const specialDeals = uniqueById(goldboxProducts)
+  // 일반 오늘의 특가는 Gold Box를 사용하지 않고 Search API 결과 중
+  // 실제 할인 정보가 확인되는 상품만 사용합니다.
+  const goldboxIds = new Set(
+    goldboxProducts.map((item) => productIdentity(item)).filter(Boolean)
+  );
+  const generalDealRaw = uniqueById(trendingRaw).filter((item) => {
+    const key = productIdentity(item);
+    if (!key || goldboxIds.has(key)) return false;
+
+    const price = normalizePrice(item.productPrice);
+    const originalPrice = normalizePrice(
+      item.originalPrice ?? item.productOriginalPrice ?? item.listPrice
+    );
+    const discountRate = normalizeDiscountRate(item.discountRate);
+
+    return Boolean(
+      (originalPrice != null && price != null && originalPrice > price) ||
+      (discountRate != null && discountRate > 0)
+    );
+  });
+
+  const specialDeals = generalDealRaw
     .map((item) => toSiteProduct(item, "오늘의 특가"))
+    .filter(Boolean);
+
+  const wowDeals = uniqueById(goldboxProducts)
+    .map((item) => toSiteProduct(item, "와우회원 전용 특가"))
     .filter(Boolean);
 
   const trendingSearch = uniqueById(trendingRaw)
@@ -635,7 +660,7 @@ async function loadProducts(env) {
     .map((item) => toSiteProduct(item, "로켓배송"))
     .filter(Boolean);
 
-  const products = [...specialDeals, ...trendingSearch, ...rocketProducts];
+  const products = [...specialDeals, ...wowDeals, ...trendingSearch, ...rocketProducts];
 
   stats.final = products.length;
   const collectionStats = {
@@ -684,6 +709,7 @@ async function loadProducts(env) {
 
   return {
     specialDeals,
+    wowDeals,
     trendingSearch,
     popularProducts: [],
     rocketProducts,
@@ -1024,7 +1050,7 @@ function normalizeAlertProduct(item) {
 
 async function notifyMatchingAlerts(env,products) {
   if(!env.ALERT_STORE) return;
-  const source=[...(products.specialDeals||[]),...(products.trendingSearch||[]),...(products.rocketProducts||[])];
+  const source=[...(products.specialDeals||[]),...(products.wowDeals||[]),...(products.trendingSearch||[]),...(products.rocketProducts||[])];
   const seen=new Set(), unique=[];
   for(const item of source){
     const p=normalizeAlertProduct(item);
