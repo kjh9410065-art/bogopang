@@ -13,7 +13,7 @@
   },
   "triggers": {
     "crons": [
-      "0 */6 * * *"
+      "0 */3 * * *"
     ]
   },
   "durable_objects": {
