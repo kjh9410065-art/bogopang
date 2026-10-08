@@ -69,7 +69,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <body>
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><button class="alert-top" type="button" data-page="alerts" aria-label="상품 알림">🔔</button><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button><button type="button" data-page="alerts">🔔 상품 알림</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="wowDeals">💛 와우회원 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button><button type="button" data-page="alerts">🔔 상품 알림</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -95,6 +95,11 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <section id="dealSection" class="section">
 <div class="section-head"><div><h2>🔥 오늘의 특가</h2><p>쿠팡에서 확인할 수 있는 특가상품</p></div><span id="dealCount" class="count"></span></div>
 <section id="dealGrid" class="grid" aria-live="polite"></section><div id="dealMore" class="more-wrap"></div>
+</section>
+
+<section id="wowDealSection" class="section">
+<div class="section-head"><div><h2>💛 와우회원 특가</h2><p>쿠팡 Gold Box에서 제공하는 와우회원 전용 특가상품</p></div><span id="wowDealCount" class="count"></span></div>
+<section id="wowDealGrid" class="grid" aria-live="polite"></section><div id="wowDealMore" class="more-wrap"></div>
 </section>
 
 <section id="discoverySection" class="section">
@@ -133,7 +138,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 </main>
 <script>
 // 목적별 상품 데이터를 분리해 사용합니다.
-let productData={specialDeals:[],trendingSearch:[],popularProducts:[],rocketProducts:[],trendKeywords:[]};
+let productData={specialDeals:[],wowDeals:[],trendingSearch:[],popularProducts:[],rocketProducts:[],trendKeywords:[]};
 
 // 자동 갱신이 중지된 동안 화면 구조를 확인할 수 있도록 미리보기 데이터를 사용합니다.
 const PREVIEW_MODE=false;
@@ -152,10 +157,11 @@ rocketProducts:[
 {id:"sample-1",name:"오늘의 특가 상품 예시",price:29900,originalPrice:39900,discountRate:25,image:"",category:"생활용품",rocket:true,keyword:null,source:"미리보기",url:"#"},
 {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
-const PAGE_ROUTES={home:"/",deals:"/deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search",alerts:"/alerts"};
+const PAGE_ROUTES={home:"/",deals:"/deals",wowDeals:"/wow-deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search",alerts:"/alerts"};
 function getPageFromPath(){
 const path=window.location.pathname.replace(/\/$/,"")||"/";
 if(path==="/deals")return "deals";
+if(path==="/wow-deals")return "wowDeals";
 if(path==="/discovery")return "discovery";
 if(path==="/trends")return "trends";
 if(path==="/rocket")return "rocket";
@@ -634,20 +640,22 @@ drawSearch();
 const isSearch=activePage==="search"&&Boolean(searchKeyword);
 const isHome=activePage==="home";
 const isDeals=activePage==="deals";
+const isWowDeals=activePage==="wowDeals";
 const isDiscovery=activePage==="discovery";
 const isTrends=activePage==="trends";
 const isRocket=activePage==="rocket";
 const isAlerts=activePage==="alerts";
-const isCategory=!isHome&&!isDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch&&!isAlerts;
+const isCategory=!isHome&&!isDeals&&!isWowDeals&&!isDiscovery&&!isTrends&&!isRocket&&!isSearch&&!isAlerts;
 
 // 검색 화면에서만 상단 히어로/주요 탭을 숨기고, 특가·발견·검색·로켓 페이지에서는 탭을 계속 보여줍니다.
 document.querySelector(".hero").classList.toggle("hidden",isSearch);
 document.getElementById("quickPrices").classList.toggle("hidden",isSearch);
-document.getElementById("categoryPages").classList.toggle("hidden",isSearch||isDeals||isDiscovery||isTrends||isRocket);
+document.getElementById("categoryPages").classList.toggle("hidden",isSearch||isDeals||isWowDeals||isDiscovery||isTrends||isRocket);
 document.getElementById("tabs").classList.add("hidden");
 
 setSectionVisible("homeSection",isHome);
 setSectionVisible("dealSection",isDeals);
+setSectionVisible("wowDealSection",isWowDeals);
 setSectionVisible("discoverySection",isDiscovery);
 setSectionVisible("trendSection",isTrends);
 setSectionVisible("rocketSection",isRocket);
@@ -665,6 +673,13 @@ const raw=sortItems(filterItems(productData.specialDeals));
 document.getElementById("dealCount").textContent=raw.length?raw.length+"개 상품":"";
 drawGrid("dealGrid",raw,"현재 오늘의 특가 상품이 없습니다.");
 document.getElementById("dealMore").innerHTML="";
+}
+
+if(isWowDeals){
+const items=sortItems(filterItems(productData.wowDeals));
+document.getElementById("wowDealCount").textContent=items.length?items.length+"개 상품":"";
+drawGrid("wowDealGrid",items,"현재 와우회원 특가 상품이 없습니다.");
+document.getElementById("wowDealMore").innerHTML="";
 }
 
 if(isDiscovery){
@@ -716,7 +731,7 @@ if(emptyReset)emptyReset.onclick=()=>navigateToPage("home");
 }
 
 // 쿠팡 상품 API에서 목적별 상품 데이터를 가져옵니다.
-async function loadProducts(){const grid=document.getElementById("grid");grid.innerHTML='<div class="empty">상품을 불러오는 중...</div>';try{const response=await fetch("/api/products"),data=await response.json();if(!response.ok||!data||Array.isArray(data))throw new Error(data?.error||"상품 정보를 불러오지 못했습니다.");productData={specialDeals:Array.isArray(data.specialDeals)?data.specialDeals:[],trendingSearch:Array.isArray(data.trendingSearch)?data.trendingSearch:[],popularProducts:Array.isArray(data.popularProducts)?data.popularProducts:[],trendKeywords:Array.isArray(data.trendKeywords)?data.trendKeywords:[],rocketProducts:Array.isArray(data.rocketProducts)?data.rocketProducts:[]};const hasProducts=Object.values(productData).some(list=>list.length>0);if(!hasProducts&&PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false}draw()}catch(error){if(PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false;draw();console.warn("미리보기 데이터 사용:",error.message);return}grid.innerHTML='<div class="empty">'+escapeHtml(error.message||"상품 정보를 불러오지 못했습니다.")+"</div>";console.error(error)}}
+async function loadProducts(){const grid=document.getElementById("grid");grid.innerHTML='<div class="empty">상품을 불러오는 중...</div>';try{const response=await fetch("/api/products"),data=await response.json();if(!response.ok||!data||Array.isArray(data))throw new Error(data?.error||"상품 정보를 불러오지 못했습니다.");productData={specialDeals:Array.isArray(data.specialDeals)?data.specialDeals:[],wowDeals:Array.isArray(data.wowDeals)?data.wowDeals:[],trendingSearch:Array.isArray(data.trendingSearch)?data.trendingSearch:[],popularProducts:Array.isArray(data.popularProducts)?data.popularProducts:[],trendKeywords:Array.isArray(data.trendKeywords)?data.trendKeywords:[],rocketProducts:Array.isArray(data.rocketProducts)?data.rocketProducts:[]};const hasProducts=Object.values(productData).some(list=>list.length>0);if(!hasProducts&&PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false}draw()}catch(error){if(PREVIEW_MODE){productData=SAMPLE_DATA;document.getElementById("preview").hidden=false;draw();console.warn("미리보기 데이터 사용:",error.message);return}grid.innerHTML='<div class="empty">'+escapeHtml(error.message||"상품 정보를 불러오지 못했습니다.")+"</div>";console.error(error)}}
 
 // 검색어가 바뀌면 즉시 상품을 필터링하고, 비우면 일반 화면으로 돌아갑니다.
 document.getElementById("q").oninput=()=>{searchKeyword=document.getElementById("q").value.trim();searchTrendOnly=false;searchPrice="전체";searchCategory="전체";searchSort="recommended";if(searchKeyword){history.replaceState({page:"search"},"",PAGE_ROUTES.search+"?q="+encodeURIComponent(searchKeyword));activePage="search"}else{history.replaceState({page:"home"},"",PAGE_ROUTES.home);activePage="home"}draw()};
