@@ -21,7 +21,7 @@ const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=discount-rate-v3"
 
 // 쿠팡 상품은 가격과 특가 상태가 변할 수 있으므로 하루 1회보다 자주 갱신합니다.
 // 6시간 간격으로 갱신해 최신성과 API 호출량 사이의 균형을 유지합니다.
-const REFRESH_INTERVAL_SECONDS = 6 * 60 * 60;
+const REFRESH_INTERVAL_SECONDS = 3 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
