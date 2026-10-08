@@ -1052,11 +1052,20 @@ export class ProductAlertStore extends DurableObject {
         return jsonResponse({ok:true,alerts:data.alerts||[]});
       }
       if(request.method==="POST"&&url.pathname==="/save"){
-        const body=await request.json(), alert=sanitizeAlert(body.alert);
+        const body=await request.json(), alert=sanitizeAlert(body.alert), snapshot=sanitizeSnapshot(body.snapshot);
         if(!clientId||!alert)return jsonResponse({ok:false,error:"알림 조건이 올바르지 않습니다."},400);
         const data=await this.readClient(clientId), index=data.alerts.findIndex(a=>a.id===alert.id);
-        if(index>=0){alert.matches=data.alerts[index].matches||[];alert.alertedProductState=data.alerts[index].alertedProductState||{};data.alerts[index]=alert}
-        else data.alerts.push(alert);
+        if(index>=0){
+          alert.matches=data.alerts[index].matches||[];
+          alert.alertedProductState=data.alerts[index].alertedProductState||{};
+          alert.baselineProducts=snapshot;
+          alert.baselineAt=Date.now();
+          data.alerts[index]=alert;
+        } else {
+          alert.baselineProducts=snapshot;
+          alert.baselineAt=Date.now();
+          data.alerts.push(alert);
+        }
         await this.writeClient(clientId,data); return jsonResponse({ok:true,alerts:data.alerts});
       }
       if(request.method==="POST"&&url.pathname==="/delete"){
@@ -1107,11 +1116,18 @@ export class ProductAlertStore extends DurableObject {
       const data=JSON.parse(row.data);let changed=false;
       for(const alert of Array.isArray(data.alerts)?data.alerts:[]){
         if(!alert.active)continue;
-        const state=alert.alertedProductState||{},matched=[];
+        const state=alert.alertedProductState||{},matched=[],baseline=new Map((alert.baselineProducts||[]).map(p=>[p.id,p]));
         for(const product of products){
           if(!alertMatchesProduct(alert,product))continue;
-          const previous=state[product.id], priceChanged=previous&&Number(previous.price)!==Number(product.price);
-          if(!previous||priceChanged){matched.push(product);state[product.id]={price:product.price,alertedAt:Date.now()}}
+          const previous=state[product.id];
+          const baselineProduct=baseline.get(product.id);
+          const isNewSinceBaseline=!baselineProduct;
+          const priceChangedSinceBaseline=Boolean(baselineProduct)&&Number(baselineProduct.price)!==Number(product.price);
+          const wasAlreadyTracked=Boolean(previous);
+          if((isNewSinceBaseline||priceChangedSinceBaseline)&&(!wasAlreadyTracked||priceChangedSinceBaseline)){
+            matched.push(product);
+            state[product.id]={price:product.price,alertedAt:Date.now()};
+          }
         }
         if(!matched.length)continue;
         alert.alertedProductState=trimAlertedState(state);alert.lastCheckedAt=Date.now();alert.lastMatchedAt=Date.now();
@@ -1139,6 +1155,24 @@ export class ProductAlertStore extends DurableObject {
   }
 }
 
+function sanitizeSnapshot(raw){
+  if(!Array.isArray(raw)) return [];
+  const seen=new Set(), result=[];
+  for(const item of raw.slice(0,1000)){
+    const id=String(item?.id||"").trim(), name=String(item?.name||"").trim(), price=Number(item?.price);
+    if(!id||!name||!Number.isFinite(price)||seen.has(id)) continue;
+    seen.add(id);
+    result.push({
+      id,name,price,
+      image:String(item?.image||"").trim(),
+      category:String(item?.category||"").trim(),
+      rocket:item?.rocket===true,
+      url:String(item?.url||"").trim()
+    });
+  }
+  return result;
+}
+
 function sanitizeAlert(raw){
   if(!raw||typeof raw!=="object")return null;
   const groups=Array.isArray(raw.groups)?raw.groups.slice(0,20):[];
@@ -1150,7 +1184,21 @@ function sanitizeAlert(raw){
     const value=String(c.value||"").trim().slice(0,100);return value?{type,value}:null;
   }).filter(Boolean)})).filter(g=>g.conditions.length);
   if(!cleanGroups.length)return null;
-  return {id:String(raw.id||crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,80)||crypto.randomUUID(),name:"상품 알림",groups:cleanGroups,groupJoin:raw.groupJoin==="AND"?"AND":"OR",active:raw.active!==false,createdAt:Number(raw.createdAt)||Date.now(),updatedAt:Date.now(),matches:[],alertedProductState:{}};
+  return {
+    id:String(raw.id||crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,80)||crypto.randomUUID(),
+    name:"상품 알림",
+    groups:cleanGroups,
+    groupJoin:raw.groupJoin==="AND"?"AND":"OR",
+    active:raw.active!==false,
+    createdAt:Number(raw.createdAt)||Date.now(),
+    updatedAt:Date.now(),
+    matches:Array.isArray(raw.matches)?raw.matches.slice(0,20):[],
+    alertedProductState:raw.alertedProductState&&typeof raw.alertedProductState==="object"?raw.alertedProductState:{},
+    baselineProducts:Array.isArray(raw.baselineProducts)?raw.baselineProducts.slice(0,1000):[],
+    baselineAt:Number(raw.baselineAt)||0,
+    lastCheckedAt:Number(raw.lastCheckedAt)||0,
+    lastMatchedAt:Number(raw.lastMatchedAt)||0
+  };
 }
 
 function trimAlertedState(state){
