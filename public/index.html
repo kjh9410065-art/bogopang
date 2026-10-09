@@ -703,6 +703,8 @@ function drawAlerts(){setSectionVisible("alertSection",activePage==="alerts");if
 let valueUnit="all",valueCategory="전체",valueMaxPrice="전체",valueQuery="",valueSort="unit";
 function parseUnitSpec(item){
  const name=String(item.name||"").toLowerCase();
+ // mg 표기는 영양성분·유효성분 함량일 수 있으므로 상품 전체 중량으로 환산하지 않습니다.
+ if(/\d+(?:\.\d+)?\s*mg\b/i.test(name))return null;
  if(/옵션|랜덤발송|색상선택|사이즈선택/.test(name))return null;
  const units=[...name.matchAll(/(\d+(?:\.\d+)?)\s*(kg|g|mg|ml|l|㎏|ℓ)(?![a-z])/gi)];
  const counts=[...name.matchAll(/(\d+)\s*(개입|개|매입|매|팩|봉|캔|병|롤|장|포|입)(?![가-힣])/g)];
