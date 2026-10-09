@@ -42,7 +42,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .logo{font-size:27px;font-weight:900;letter-spacing:-1.5px}.logo b{color:var(--accent)}
 .search{width:min(540px,52vw);position:relative}.search input{width:100%;padding:12px 38px 12px 16px;border:1px solid #dddfe5;border-radius:14px;background:#fafafa;outline:0}
 .search input:focus{border-color:#b9bbc2;background:#fff}
-.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span,.hero-points button{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444;cursor:pointer}.hero-points button.on{background:#171717;color:#fff;border-color:#171717}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}
+.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(30px,5vw,46px);letter-spacing:-2.5px}.hero p{margin:10px 0 0;color:var(--muted);font-size:15px}.hero-points{display:flex;gap:7px;overflow:auto;scrollbar-width:none;margin-top:18px}.hero-points::-webkit-scrollbar{display:none}.hero-points span,.hero-points button{flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;color:#444;cursor:pointer}.hero-points button.on{background:#171717;color:#fff;border-color:#171717}.hero-tagline{margin-top:11px;color:#8a4b38;font-size:12px;font-weight:800}.seo-guide{margin:4px 0 24px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#fff 0%,#fff8f4 100%)}.seo-guide h2{margin:0;font-size:21px;letter-spacing:-.7px}.seo-guide>p{max-width:780px;margin:9px 0 16px;color:#666;font-size:13px;line-height:1.8}.seo-guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.seo-guide-item{padding:13px;border:1px solid #eee5e1;border-radius:12px;background:rgba(255,255,255,.88)}.seo-guide-item strong{display:block;margin-bottom:5px;font-size:13px}.seo-guide-item span{color:#777;font-size:12px;line-height:1.7}.seo-guide-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.seo-guide-links a{padding:8px 11px;border:1px solid #e7e8ec;border-radius:999px;background:#fff;font-size:12px;font-weight:800}.seo-guide-links a:hover{border-color:#ffb49e;color:#c44420}@media(max-width:650px){.seo-guide{padding:16px}.seo-guide h2{font-size:19px}.seo-guide-grid{grid-template-columns:1fr}.seo-guide-item{padding:12px}}
 .preview{margin:4px 0 16px;padding:10px 13px;border-radius:12px;background:#fff8f4;color:#8a4b38;font-size:12px}.affiliate-notice{margin-top:14px;padding:11px 13px;border:1px solid #f0ddd4;border-radius:12px;background:#fff8f4;color:#7d4a38;font-size:12px;line-height:1.65}.affiliate-notice strong{font-weight:900}.affiliate-notice span{color:#777}.footer-note{margin-top:8px;color:#777;font-size:11px}.footer-links{display:flex;gap:8px;margin-top:8px}.footer-links a{text-decoration:underline;text-underline-offset:2px}.affiliate-notice{margin-top:14px;padding:10px 13px;border:1px solid #f0ddd4;border-radius:12px;background:#fff8f4;color:#7d4a38;font-size:12px;line-height:1.6}.footer-links{display:flex;gap:8px;margin-top:8px}.footer-links a{text-decoration:underline;text-underline-offset:2px}
 .quick,.chips,.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none}.quick::-webkit-scrollbar,.chips::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
 .quick{padding:2px 0 18px}.category-pages{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding:0 0 18px}.category-pages::-webkit-scrollbar{display:none}.category-page{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}.category-page.on{background:#171717;color:#fff;border-color:#171717}.pill,.chip,.tab,.sort{border:1px solid #dddfe5;background:#fff;border-radius:12px;padding:10px 14px;white-space:nowrap;font-weight:800;cursor:pointer}
@@ -69,7 +69,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <body>
 <header><div class="wrap head"><a class="logo" href="/">보고<b>팡</b></a><button class="alert-top" type="button" data-page="alerts" aria-label="상품 알림">🔔</button><div class="search"><input id="q" type="search" placeholder="상품을 검색해보세요" aria-label="상품 검색"><button id="searchReset" class="search-reset" type="button" aria-label="검색어 지우기">×</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><button type="button" data-page="deals">🔥 오늘의 특가</button><button type="button" data-page="wowDeals">💛 와우회원 특가</button><button type="button" data-page="discovery">✨ 오늘의 발견</button><button type="button" data-page="trends">🔎 오늘의 검색</button><button type="button" data-page="rocket">🚀 로켓배송</button><button type="button" data-page="alerts">🔔 상품 알림</button></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
+<section class="hero"><h1>오늘 뭐 살까?</h1><p>오늘 확인할 만한 상품을 한눈에 찾아보세요.</p><div class="affiliate-notice"><strong>쿠팡 파트너스 안내</strong><br>이 사이트는 쿠팡 파트너스 활동의 일환으로, 상품 구매 시 일정액의 수수료를 제공받을 수 있습니다.<br><span>상품 가격·재고·배송 조건은 쿠팡에서 최종 확인해 주세요.</span></div><nav id="mainPages" class="hero-points" aria-label="보고팡 주요 페이지"><a href="/deals" data-page="deals">🔥 오늘의 특가</a><a href="/wow-deals" data-page="wowDeals">💛 와우회원 특가</a><a href="/discovery" data-page="discovery">✨ 오늘의 발견</a><a href="/trends" data-page="trends">🔎 오늘의 검색</a><a href="/rocket" data-page="rocket">🚀 로켓배송</a><a href="/alerts" data-page="alerts">🔔 상품 알림</a></nav><div class="hero-tagline">살 게 없어도 한 번, 살 게 있으면 꼭.</div></section>
 <div id="preview" class="preview" hidden>현재는 화면 구조 확인을 위한 미리보기 데이터가 표시되고 있습니다.</div>
 
 <!-- 가격대는 첫 화면에서 바로 상품을 좁힐 수 있도록 배치합니다. -->
@@ -85,6 +85,17 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 <section id="homeSection" class="section">
 <div class="section-head"><div><h2>🛍️ 오늘의 상품</h2><p>오늘 확인할 만한 상품을 먼저 골라봤어요.</p></div><span id="homeCount" class="count"></span></div>
 <section id="homeGrid" class="grid" aria-live="polite"></section>
+</section>
+
+<section id="seoGuide" class="seo-guide" aria-labelledby="seoGuideTitle">
+<h2 id="seoGuideTitle">쿠팡 상품을 주제별로 편리하게 찾아보세요</h2>
+<p>보고팡은 쿠팡에서 확인할 수 있는 상품 정보를 특가, 검색 키워드, 카테고리, 로켓배송 등으로 나누어 살펴볼 수 있는 상품 탐색 서비스입니다. 상품의 최종 가격과 재고, 배송 조건은 쿠팡 상품 페이지에서 확인할 수 있습니다.</p>
+<div class="seo-guide-grid">
+<div class="seo-guide-item"><strong>🔥 오늘의 특가</strong><span>일반 검색 상품을 살펴보고, 할인 정보가 확인되는 상품을 우선 확인할 수 있습니다.</span></div>
+<div class="seo-guide-item"><strong>💛 와우회원 특가</strong><span>쿠팡 Gold Box에서 제공하는 와우회원 특가상품을 별도로 모아 확인할 수 있습니다.</span></div>
+<div class="seo-guide-item"><strong>🚀 카테고리와 로켓배송</strong><span>생활·주방, 식품, 가전·디지털 등 관심 분야와 로켓배송 상품을 중심으로 찾아볼 수 있습니다.</span></div>
+</div>
+<nav class="seo-guide-links" aria-label="상품 탐색 바로가기"><a href="/deals" data-page="deals">오늘의 특가 보기</a><a href="/wow-deals" data-page="wowDeals">와우회원 특가 보기</a><a href="/discovery" data-page="discovery">오늘의 발견 보기</a><a href="/rocket" data-page="rocket">로켓배송 상품 보기</a></nav>
 </section>
 
 <section id="searchSection" class="section search-results hidden">
@@ -158,6 +169,44 @@ rocketProducts:[
 {id:"sample-3",name:"오늘 많이 검색된 상품 예시",price:18900,originalPrice:null,discountRate:null,image:"",category:"식품",rocket:true,keyword:"검색어 예시",source:"미리보기",url:"#"}]};
 
 const PAGE_ROUTES={home:"/",deals:"/deals",wowDeals:"/wow-deals",discovery:"/discovery",trends:"/trends",rocket:"/rocket",search:"/search",alerts:"/alerts"};
+
+// 주요 페이지마다 검색 결과에 맞는 제목과 설명을 설정합니다.
+function updateSeoMetadata(){
+const pageMeta={
+home:["보고팡 | 쿠팡 할인상품·특가상품·로켓배송 상품 찾기","쿠팡에서 확인할 수 있는 특가상품, 와우회원 특가, 검색 키워드 상품과 로켓배송 상품을 주제별로 찾아보세요."],
+deals:["오늘의 특가 상품 찾기 | 보고팡","일반 검색 상품 중 할인 정보가 확인되는 상품을 우선 살펴보세요. 할인 여부와 최종 가격은 쿠팡에서 확인할 수 있습니다."],
+wowDeals:["쿠팡 와우회원 특가 | 보고팡","쿠팡 Gold Box의 와우회원 특가상품을 모아 확인하세요. 상품 가격과 구매 조건은 쿠팡에서 확인할 수 있습니다."],
+discovery:["오늘의 발견 | 보고팡","가격대와 배송 조건, 검색 키워드를 바탕으로 지금 확인할 만한 쿠팡 상품을 찾아보세요."],
+trends:["오늘의 검색 키워드 상품 | 보고팡","최근 검색 키워드와 연결된 상품을 찾아보세요. 검색 주제와 상품 정보는 제공 데이터에 따라 달라질 수 있습니다."],
+rocket:["쿠팡 로켓배송 상품 찾기 | 보고팡","로켓배송 가능 여부가 확인된 상품을 모아 살펴보세요. 최종 배송 가능 여부와 도착 예정일은 쿠팡에서 확인하세요."],
+alerts:["상품 조건 알림 | 보고팡","원하는 가격, 키워드, 카테고리와 로켓배송 조건을 설정하고 조건에 맞는 상품 알림을 관리하세요."]
+};
+let title,description,canonical;
+if(activePage==="search"){
+const query=String(searchKeyword||"").trim();
+title=(query?query+" 검색 결과":"상품 검색")+" | 보고팡";
+description=query?"보고팡에서 "+query+" 관련 쿠팡 상품을 찾아보세요. 최종 가격과 재고, 배송 조건은 쿠팡에서 확인할 수 있습니다.":"상품명과 키워드로 쿠팡 상품을 검색해 보세요.";
+canonical="https://bogopang.tcflick.com/search";
+}else if(activePage==="category"){
+title=(activeCategoryPage==="전체"?"전체 상품":activeCategoryPage)+" 상품 찾기 | 보고팡";
+const categoryInfo=CATEGORY_PAGES.find(item=>item[0]===activeCategoryPage);
+description=(categoryInfo?categoryInfo[1]:"관심 카테고리의 상품을 찾아보세요.")+" 상품의 최종 가격과 배송 조건은 쿠팡에서 확인할 수 있습니다.";
+canonical="https://bogopang.tcflick.com/";
+}else{
+const meta=pageMeta[activePage]||pageMeta.home;
+title=meta[0];description=meta[1];canonical="https://bogopang.tcflick.com"+(PAGE_ROUTES[activePage]||"/");
+}
+document.title=title;
+document.querySelector('meta[name="description"]').content=description;
+document.querySelector('meta[property="og:title"]').content=title;
+document.querySelector('meta[property="og:description"]').content=description;
+document.querySelector('meta[property="og:url"]').content=canonical;
+document.querySelector('meta[name="twitter:title"]').content=title;
+document.querySelector('meta[name="twitter:description"]').content=description;
+document.querySelector('link[rel="canonical"]').href=canonical;
+const robots=document.querySelector('meta[name="robots"]');
+if(robots)robots.content=(activePage==="search"||activePage==="alerts")?"noindex,follow,max-image-preview:large":"index,follow,max-image-preview:large";
+}
 function getPageFromPath(){
 const path=window.location.pathname.replace(/\/$/,"")||"/";
 if(path==="/deals")return "deals";
@@ -235,6 +284,7 @@ const route=PAGE_ROUTES[page]||"/";
 const query=options.query?("?q="+encodeURIComponent(options.query)):"";
 history.pushState({page}, "", route+query);
 activePage=page;
+updateSeoMetadata();
 if(page!=="search"){
 searchKeyword="";
 searchTrendOnly=false;
@@ -258,6 +308,7 @@ window.scrollTo({top:0,behavior:"smooth"});
 // 브라우저 뒤로가기와 앞으로가기를 지원합니다.
 window.addEventListener("popstate",()=>{
 activePage=getPageFromPath();
+updateSeoMetadata();
 searchKeyword=new URLSearchParams(window.location.search).get("q")||"";
 document.getElementById("q").value=searchKeyword;
 searchTrendOnly=false;
@@ -741,7 +792,7 @@ document.getElementById("searchReset").onclick=()=>{document.getElementById("q")
 document.getElementById("q").addEventListener("keydown",event=>{if(event.key==="Escape"){document.getElementById("searchReset").click()}});
 
 // 상단 주요 페이지 메뉴를 연결합니다.
-document.querySelectorAll("[data-page]").forEach(button=>button.onclick=()=>navigateToPage(button.dataset.page));
+document.querySelectorAll("[data-page]").forEach(link=>link.onclick=event=>{event.preventDefault();navigateToPage(link.dataset.page)});
 document.getElementById("addAlertGroup").onclick=()=>{alertGroups.push({conditions:[{type:"keyword",value:""}]});renderAlertEditor();renderAlertPreview()};
 document.getElementById("saveAlert").onclick=saveAlert;
 document.getElementById("enablePush").onclick=enableAlertPush;
@@ -750,7 +801,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch
 // 로고 클릭은 홈으로 이동합니다.
 document.querySelector(".logo").onclick=event=>{event.preventDefault();navigateToPage("home")};
 
-// 초기 화면을 상품 API와 함께 로드합니다.
+// 초기 주소에 맞춰 SEO 메타데이터를 설정한 뒤 상품을 불러옵니다.
+updateSeoMetadata();
 loadProducts();
 </script>
 </body>
