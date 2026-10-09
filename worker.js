@@ -721,7 +721,20 @@ async function loadProducts(env) {
     );
   });
 
-  const specialDeals = generalDealRawFiltered
+  // 쿠팡 Search API가 할인 전 가격/할인율을 제공하지 않는 경우에도
+  // 일반 특가 탭이 빈 화면이 되지 않도록 Gold Box를 제외한 검색 상품을 fallback으로 사용합니다.
+  // fallback 상품에는 할인율을 추정하거나 임의로 붙이지 않습니다.
+  const generalSearchFallback = uniqueById([...generalDealRaw, ...trendingRaw])
+    .filter((item) => {
+      const key = productIdentity(item);
+      return Boolean(key) && !goldboxIds.has(key);
+    });
+
+  const selectedGeneralDeals = generalDealRawFiltered.length
+    ? generalDealRawFiltered
+    : generalSearchFallback;
+
+  const specialDeals = selectedGeneralDeals
     .map((item) => toSiteProduct(item, "오늘의 특가"))
     .filter(Boolean)
     .slice(0, GENERAL_DEAL_TARGET);
