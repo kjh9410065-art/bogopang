@@ -24,7 +24,7 @@ const GENERAL_DEAL_SEARCH_KEYWORDS = [
 const GENERAL_DEAL_TARGET = 20;
 const GENERAL_DEAL_SEARCH_LIMIT = 10;
 // 할인율 데이터 구조가 변경된 기존 캐시를 즉시 무효화하기 위한 캐시 버전입니다.
-const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=general-deals-v2";
+const CACHE_URL = "https://bogopang.tcflick.com/api/products?v=purchase-audience-v1";
 
 // 쿠팡 상품은 매시간 정각에 예약 갱신합니다.
 const REFRESH_INTERVAL_SECONDS = 60 * 60;
@@ -685,6 +685,23 @@ async function loadProducts(env) {
         ? apiDiscountRate
         : calculatedDiscountRate;
 
+    // 구매 대상은 쿠팡 API의 명시적 필드로 확인되는 경우만 인정합니다.
+    // 이 API 응답에 회원 전용 여부가 없으면 출처와 무관하게 확인 필요로 둡니다.
+    const explicitWowOnly =
+      item.isWowMemberOnly === true ||
+      item.wowMemberOnly === true ||
+      item.isWowOnly === true;
+    const explicitGeneralMember =
+      item.isGeneralMemberAvailable === true ||
+      item.availableForNonWowMembers === true;
+
+    // Gold Box API 자체가 와우회원 전용 특가 상품 목록이므로 이 경로는 전용으로 분류합니다.
+    const purchaseAudience = source === "와우회원 전용 특가" || explicitWowOnly
+      ? "wow-only"
+      : explicitGeneralMember
+        ? "general"
+        : "unknown";
+
     return {
       id: String(item.productId || item.productUrl || item.productName),
       name: item.productName,
@@ -694,6 +711,7 @@ async function loadProducts(env) {
       image: item.productImage,
       category: item.categoryName || "기타",
       rocket: Boolean(item.isRocket),
+      purchaseAudience,
       keyword: trendKeywords[0] || null,
       trendKeywords,
       trendSource: item.trendSource || null,
