@@ -685,22 +685,11 @@ async function loadProducts(env) {
         ? apiDiscountRate
         : calculatedDiscountRate;
 
-    // 구매 대상은 쿠팡 API의 명시적 필드로 확인되는 경우만 인정합니다.
-    // 이 API 응답에 회원 전용 여부가 없으면 출처와 무관하게 확인 필요로 둡니다.
-    const explicitWowOnly =
-      item.isWowMemberOnly === true ||
-      item.wowMemberOnly === true ||
-      item.isWowOnly === true;
-    const explicitGeneralMember =
-      item.isGeneralMemberAvailable === true ||
-      item.availableForNonWowMembers === true;
-
-    // Gold Box API 자체가 와우회원 전용 특가 상품 목록이므로 이 경로는 전용으로 분류합니다.
-    const purchaseAudience = source === "와우회원 전용 특가" || explicitWowOnly
+    // 이 상품 검색 응답에는 구매 대상이 명시되어 있지 않으므로
+    // 문서화되지 않은 필드명을 추측하지 않습니다. Gold Box 출처만 와우 전용으로 분류합니다.
+    const purchaseAudience = source === "와우회원 전용 특가"
       ? "wow-only"
-      : explicitGeneralMember
-        ? "general"
-        : "unknown";
+      : "unknown";
 
     return {
       id: String(item.productId || item.productUrl || item.productName),
