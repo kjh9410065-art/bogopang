@@ -744,7 +744,7 @@ function drawValueComparison(){
  tools.querySelectorAll("[data-value-unit]").forEach(b=>b.onclick=()=>{valueUnit=b.dataset.valueUnit;drawValueComparison()});
  function renderCards(){
   let items=getValueCandidates().filter(i=>(valueUnit==="all"||i._unitSpec?.kind===valueUnit)&&(valueCategory==="전체"||i._valueCategory===valueCategory)&&(!valueQuery||String(i.name||"").toLowerCase().includes(valueQuery.toLowerCase()))&&(valueMaxPrice==="전체"||(i._valuePrice!=null&&i._valuePrice<=({"1만원 이하":10000,"3만원 이하":30000,"5만원 이하":50000,"10만원 이하":100000}[valueMaxPrice]))));
-  items.sort((a,b)=>{if(valueSort==="price")return(a._valuePrice??Infinity)-(b._valuePrice??Infinity);if(valueSort==="name")return String(a.name).localeCompare(String(b.name),"ko");return(a._unitPrice??Infinity)-(b._unitPrice??Infinity)});
+  items.sort((a,b)=>{if(valueSort==="price")return(a._valuePrice??Infinity)-(b._valuePrice??Infinity);if(valueSort==="name")return String(a.name).localeCompare(String(b.name),"ko");const ap=a._unitPrice, bp=b._unitPrice;if(ap==null&&bp==null)return String(a.name).localeCompare(String(b.name),"ko");if(ap==null)return 1;if(bp==null)return -1;return ap-bp});
   document.getElementById("valueCount").textContent=items.length?items.length+"개 상품":"0개 상품";
   if(!items.length){grid.innerHTML='<div class="empty"><strong>조건에 맞는 상품이 없습니다.</strong>비교 기준을 바꾸거나 다른 검색어를 입력해 보세요. 규격이 확인되는 실제 상품만 계산합니다.</div>';return}
   grid.innerHTML=items.map(item=>{
