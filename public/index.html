@@ -58,12 +58,12 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .img{aspect-ratio:1;background:#f1f2f4;display:grid;place-items:center;overflow:hidden}.img img{width:100%;height:100%;object-fit:contain}.img.failed:after{content:"이미지를 불러올 수 없습니다";color:#999;font-size:11px}
 .body{padding:14px;display:flex;flex:1;flex-direction:column}.badge{min-height:18px;color:var(--accent);font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.keyword{display:inline-block;margin-left:5px;color:#777;font-weight:700}.card-meta{min-height:22px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:7px}.meta-badge{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;background:#f4f5f7;color:#666;font-size:10px;font-weight:800;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta-badge.rocket{color:#16734a;background:#eef9f3}.reason-row{min-height:22px;display:flex;gap:5px;flex-wrap:wrap}.reason{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;background:#fff4ef;color:#a33f20;font-size:10px;font-weight:800;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .title{min-height:44px;font-size:14px;line-height:1.5;font-weight:700;margin-top:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.price{font-size:20px;font-weight:900;margin-top:10px;letter-spacing:-.4px}.discount{color:var(--accent);margin-right:7px}.old{color:#aaa;text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:500}
+.price-row{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-top:10px}.price{font-size:20px;font-weight:900;letter-spacing:-.4px;color:var(--accent)}.discount{display:inline-flex;align-items:center;color:var(--accent);background:#fff0eb;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:900;white-space:nowrap}.old{color:#999;text-decoration:line-through;font-size:12px;font-weight:500;white-space:nowrap}
 .buy{display:block;margin-top:auto;padding-top:13px;padding:11px 10px;min-height:42px;text-align:center;border-radius:10px;background:#171717;color:#fff;font-size:13px;font-weight:800;touch-action:manipulation}
 .empty{grid-column:1/-1;text-align:center;color:#777;padding:45px 0;background:#fff;border:1px solid var(--line);border-radius:18px}.empty strong{display:block;color:#333;font-size:15px;margin-bottom:6px}.search-tools{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}.filter-row{display:flex;gap:7px;overflow:auto;scrollbar-width:none}.filter-row::-webkit-scrollbar{display:none}.filter-title{font-size:11px;font-weight:900;color:#888;align-self:center;white-space:nowrap}.search-reset{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#999;font-size:18px;cursor:pointer;padding:4px;display:none}.search-reset.show{display:block}.reason-row{display:flex;gap:5px;min-height:18px;overflow:hidden}.reason{display:inline-block;padding:3px 6px;border-radius:999px;background:#fff1eb;color:var(--accent);font-size:10px;font-weight:900;white-space:nowrap}.more-wrap{text-align:center;margin-top:14px}.more-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 15px;font-size:12px;font-weight:800;cursor:pointer}
 .alert-top{border:0;background:transparent;font-size:20px;cursor:pointer;margin-right:8px}.alert-page{max-width:920px;margin:0 auto}.alert-intro{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}.alert-actions{display:flex;gap:8px;flex-wrap:wrap}.alert-group{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;background:#fff}.alert-condition{display:grid;grid-template-columns:140px 1fr auto;gap:8px;align-items:center;margin-top:8px}.alert-condition select,.alert-condition input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:13px;background:#fff}.alert-condition button,.alert-group button,.alert-save,.alert-enable{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer}.alert-save{background:var(--accent);color:#fff;border-color:var(--accent)}.alert-preview{margin-top:12px;padding:10px 12px;border-radius:10px;background:#f7f7f7;color:#555;font-size:12px;line-height:1.6}.alert-list{margin-top:20px}.alert-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px;background:#fff}.alert-card-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.alert-card-title{font-weight:900}.alert-card-meta{color:#888;font-size:11px;margin-top:5px}.alert-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.alert-match{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);margin-top:10px;text-decoration:none;color:inherit}.alert-match img{width:54px;height:54px;object-fit:contain;border-radius:8px;background:#f7f7f7}.alert-match strong{display:block;font-size:12px}.alert-match span{font-size:12px;color:#555}.alert-empty{padding:30px;text-align:center;color:#888;border:1px dashed var(--line);border-radius:14px}.alert-note{font-size:11px;color:#888;line-height:1.6;margin-top:8px}@media(max-width:650px){.alert-condition{grid-template-columns:1fr}.alert-condition button{justify-self:start}}.hidden{display:none!important}footer{padding:20px 0 45px;color:#777;font-size:12px;line-height:1.7}
 @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 34px 10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.buy{min-height:44px;padding:12px 8px}.meta-badge{font-size:9px;padding:4px 6px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
+@media(max-width:650px){.wrap{width:calc(100% - 20px)}.head{min-height:62px}.logo{font-size:24px}.search{width:180px}.search input{padding:10px 34px 10px 12px;font-size:13px}.hero{padding:26px 0 15px}.hero h1{font-size:32px}.hero p{font-size:13px}.tools{display:block}.sorts{margin-top:10px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.body{padding:12px}.title{font-size:13px}.price{font-size:18px}.discount{font-size:11px;padding:3px 5px}.old{font-size:11px}.buy{min-height:44px;padding:12px 8px}.meta-badge{font-size:9px;padding:4px 6px}.section-head h2{font-size:20px}.discovery{grid-template-columns:repeat(2,1fr);gap:10px}}
 </style>
 </head>
 <body>
@@ -391,20 +391,23 @@ return labels.slice(0,2)
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
 function cardHtml(item,options={}){
 const price=parsePrice(item.price),original=parsePrice(item.originalPrice);
-const hideDiscountDetails=item.source==="오늘의 특가";
 const rawApiRate=Number(String(item.discountRate??item.discountRatePercent??item.discountPercentage??item.discountPercent??"").replace(/,/g,"").replace(/%$/,""));
 const apiRate=Number.isFinite(rawApiRate)&&rawApiRate>0&&rawApiRate<1?rawApiRate*100:rawApiRate;
 const calculatedRate=original!=null&&price!=null&&original>price
   ? Math.round(((original-price)/original)*100)
   : null;
 
-// 오늘의 특가는 할인율/정상가 표시를 숨기고 판매가격만 표시합니다.
-// 다른 영역은 API에서 확인 가능한 할인 정보가 있을 때만 표시합니다.
-const rate=hideDiscountDetails?null:(Number.isFinite(apiRate)&&apiRate>0
-  ? (calculatedRate!=null&&Math.abs(apiRate-calculatedRate)>15?calculatedRate:Math.round(apiRate))
-  : calculatedRate);
-const discount=rate!=null&&rate>0?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";
-const old=!hideDiscountDetails&&original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";
+// 원가가 실제 데이터로 확인되고 판매가보다 높을 때만 원가와 할인율을 표시합니다.
+const rate=calculatedRate!=null
+  ? calculatedRate
+  : (Number.isFinite(apiRate)&&apiRate>0&&apiRate<=99?Math.round(apiRate):null);
+const old=original!=null&&price!=null&&original>price
+  ? '<span class="old">정가 '+original.toLocaleString("ko-KR")+'원</span>'
+  : "";
+const discount=rate!=null&&rate>0
+  ? '<span class="discount">'+escapeHtml(rate)+'% 할인</span>'
+  : "";
+const salePrice=price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인";
 const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
 const reasons=getReasonLabels(item,Boolean(options.discovery));
 const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(Boolean):[];
@@ -412,9 +415,8 @@ const keyword=trendKeywords[0]||item.keyword;
 const meta=(keyword||item.rocket)?'<div class="card-meta">'+(keyword?'<span class="meta-badge">관심 키워드: '+escapeHtml(keyword)+'</span>':"")+(item.rocket?'<span class="meta-badge rocket">🚀 로켓배송</span>':"")+'</div>':"";
 const badges=reasons.length?'<div class="reason-row">'+reasons.map(x=>'<span class="reason">'+escapeHtml(x)+"</span>").join("")+"</div>":"";
 const wowBadge=options.wow?'<div class="reason-row"><span class="reason">💛 와우회원 전용 특가</span></div>':"";
-return'<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+wowBadge+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price">'+discount+(price!=null?price.toLocaleString("ko-KR")+"원":"가격 확인")+old+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 상품 확인</a></a></div></article>'
+return '<article class="card"><div class="img"><img src="'+image+'" alt="'+name+'" loading="lazy"></div><div class="body">'+wowBadge+badges+'<div class="title">'+name+'</div>'+meta+'<div class="price-row">'+old+'<span class="price">'+salePrice+'</span>'+discount+'</div><a class="buy" href="'+url+'" target="_blank" rel="nofollow sponsored noopener">쿠팡에서 상품 확인</a></div></article>'
 }
-
 
 // 상품 이미지를 실패해도 깨진 이미지 아이콘 대신 안내 영역을 표시합니다.
 function bindImageFallback(container){container.querySelectorAll(".img img").forEach(img=>{img.onerror=()=>{img.removeAttribute("src");img.parentElement.classList.add("failed")}})}
