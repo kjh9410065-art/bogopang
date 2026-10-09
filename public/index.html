@@ -340,19 +340,20 @@ return labels.slice(0,2)
 // 상품 카드 HTML을 생성하며 실제 데이터가 있는 조건만 라벨로 표시합니다.
 function cardHtml(item,options={}){
 const price=parsePrice(item.price),original=parsePrice(item.originalPrice);
+const hideDiscountDetails=item.source==="오늘의 특가";
 const rawApiRate=Number(String(item.discountRate??item.discountRatePercent??item.discountPercentage??item.discountPercent??"").replace(/,/g,"").replace(/%$/,""));
 const apiRate=Number.isFinite(rawApiRate)&&rawApiRate>0&&rawApiRate<1?rawApiRate*100:rawApiRate;
 const calculatedRate=original!=null&&price!=null&&original>price
   ? Math.round(((original-price)/original)*100)
   : null;
 
-// Worker에서 정규화한 할인율을 우선 사용하고, 기존 캐시 데이터에는 동일한 계산식으로 fallback합니다.
-// API 할인율과 계산값이 15%p를 초과해 차이나면 실제 가격 기준 계산값을 우선합니다.
-const rate=Number.isFinite(apiRate)&&apiRate>0
+// 오늘의 특가는 할인율/정상가 표시를 숨기고 판매가격만 표시합니다.
+// 다른 영역은 API에서 확인 가능한 할인 정보가 있을 때만 표시합니다.
+const rate=hideDiscountDetails?null:(Number.isFinite(apiRate)&&apiRate>0
   ? (calculatedRate!=null&&Math.abs(apiRate-calculatedRate)>15?calculatedRate:Math.round(apiRate))
-  : calculatedRate;
+  : calculatedRate);
 const discount=rate!=null&&rate>0?'<span class="discount">'+escapeHtml(rate)+"%</span>":"";
-const old=original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";
+const old=!hideDiscountDetails&&original!=null&&price!=null&&original>price?'<span class="old">'+original.toLocaleString("ko-KR")+"원</span>":"";
 const name=escapeHtml(item.name||"상품"),image=escapeHtml(item.image||""),url=escapeHtml(item.url||"#");
 const reasons=getReasonLabels(item,Boolean(options.discovery));
 const trendKeywords=Array.isArray(item.trendKeywords)?item.trendKeywords.filter(Boolean):[];
