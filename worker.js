@@ -661,24 +661,28 @@ async function loadProducts(env) {
 
     // 쿠팡 Open API에서 실제로 제공되는 할인 전 가격(originalPrice)을 사용합니다.
     // originalPrice가 판매가보다 높을 때만 가격 기준으로 할인율을 계산합니다.
+    const isGeneralDeal = source === "오늘의 특가";
     const originalPriceCandidates = [
       item.originalPrice,
       item.productOriginalPrice,
       item.listPrice
     ];
-    const originalPrice = originalPriceCandidates
-      .map(normalizePrice)
-      .find((value) => value != null) ?? null;
+    const originalPrice = isGeneralDeal
+      ? null
+      : originalPriceCandidates
+          .map(normalizePrice)
+          .find((value) => value != null) ?? null;
     const calculatedDiscountRate =
       originalPrice != null && originalPrice > price
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
         : null;
 
-    // API 응답에 실제 discountRate가 함께 제공되는 경우에만 직접 사용합니다.
-    // 존재하지 않는 필드를 추정하거나 상품명/카테고리로 할인율을 만들지 않습니다.
+    // 오늘의 특가는 할인율/정상가의 신뢰성을 보장할 수 없어 표시하지 않습니다.
+    // 와우회원 특가 등 다른 영역은 API에 실제 정보가 있는 경우에만 표시합니다.
     const apiDiscountRate = normalizeDiscountRate(item.discountRate);
-    const discountRate =
-      apiDiscountRate != null
+    const discountRate = isGeneralDeal
+      ? null
+      : apiDiscountRate != null
         ? apiDiscountRate
         : calculatedDiscountRate;
 
